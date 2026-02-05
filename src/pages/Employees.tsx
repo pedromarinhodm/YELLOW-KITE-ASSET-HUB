@@ -36,6 +36,7 @@ export default function Employees() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
@@ -56,7 +57,7 @@ export default function Employees() {
 
   useEffect(() => {
     filterEmployees();
-  }, [employees, searchTerm]);
+  }, [employees, searchTerm, departmentFilter]);
 
   const loadEmployees = async () => {
     const data = await employeeService.getAll();
@@ -65,18 +66,22 @@ export default function Employees() {
   };
 
   const filterEmployees = () => {
-    if (!searchTerm) {
-      setFilteredEmployees(employees);
-      return;
+    let filtered = [...employees];
+
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        e =>
+          e.name.toLowerCase().includes(term) ||
+          e.email.toLowerCase().includes(term) ||
+          e.role.toLowerCase().includes(term)
+      );
     }
 
-    const term = searchTerm.toLowerCase();
-    const filtered = employees.filter(
-      e =>
-        e.name.toLowerCase().includes(term) ||
-        e.email.toLowerCase().includes(term) ||
-        e.department.toLowerCase().includes(term)
-    );
+    if (departmentFilter !== 'all') {
+      filtered = filtered.filter(e => e.department === departmentFilter);
+    }
+
     setFilteredEmployees(filtered);
   };
 
@@ -233,15 +238,34 @@ export default function Employees() {
         </Dialog>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar por nome, email ou departamento..."
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          className="pl-10"
-        />
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por nome, email ou cargo..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+          <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectValue placeholder="Departamento" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os Departamentos</SelectItem>
+            <SelectItem value="Criação">Criação</SelectItem>
+            <SelectItem value="Performance">Performance</SelectItem>
+            <SelectItem value="Audio Visual">Audio Visual</SelectItem>
+            <SelectItem value="Rocket">Rocket</SelectItem>
+            <SelectItem value="Lead Zeppelin">Lead Zeppelin</SelectItem>
+            <SelectItem value="Engenharia de Soluções">Engenharia de Soluções</SelectItem>
+            <SelectItem value="Growth e Tecnologia">Growth e Tecnologia</SelectItem>
+            <SelectItem value="Financeiro">Financeiro</SelectItem>
+            <SelectItem value="RH">RH</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Employee List */}
