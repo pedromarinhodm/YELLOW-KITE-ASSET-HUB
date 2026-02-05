@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react';
-import { UserPlus, UserMinus, FileText, History, Search } from 'lucide-react';
+import { UserPlus, UserMinus, FileText, History, Search, CalendarIcon, X } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import {
   Dialog,
   DialogContent,
@@ -35,6 +44,8 @@ export default function Allocations() {
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
 
   // Onboarding state
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
@@ -172,159 +183,176 @@ export default function Allocations() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por colaborador ou equipamento..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por colaborador ou equipamento..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectValue placeholder="Departamento" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os departamentos</SelectItem>
+              <SelectItem value="Criação">Criação</SelectItem>
+              <SelectItem value="Performance">Performance</SelectItem>
+              <SelectItem value="Audio Visual">Audio Visual</SelectItem>
+              <SelectItem value="Rocket">Rocket</SelectItem>
+              <SelectItem value="Lead Zeppelin">Lead Zeppelin</SelectItem>
+              <SelectItem value="Engenharia de Soluções">Engenharia de Soluções</SelectItem>
+              <SelectItem value="Growth e Tecnologia">Growth e Tecnologia</SelectItem>
+              <SelectItem value="Financeiro">Financeiro</SelectItem>
+              <SelectItem value="RH">RH</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-          <SelectTrigger className="w-full sm:w-[200px]">
-            <SelectValue placeholder="Departamento" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os departamentos</SelectItem>
-            <SelectItem value="Criação">Criação</SelectItem>
-            <SelectItem value="Performance">Performance</SelectItem>
-            <SelectItem value="Audio Visual">Audio Visual</SelectItem>
-            <SelectItem value="Rocket">Rocket</SelectItem>
-            <SelectItem value="Lead Zeppelin">Lead Zeppelin</SelectItem>
-            <SelectItem value="Engenharia de Soluções">Engenharia de Soluções</SelectItem>
-            <SelectItem value="Growth e Tecnologia">Growth e Tecnologia</SelectItem>
-            <SelectItem value="Financeiro">Financeiro</SelectItem>
-            <SelectItem value="RH">RH</SelectItem>
-          </SelectContent>
-        </Select>
+        
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os status</SelectItem>
+              <SelectItem value="active">Ativas</SelectItem>
+              <SelectItem value="returned">Devolvidas</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full sm:w-[200px] justify-start text-left font-normal",
+                  !dateFilter && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateFilter ? format(dateFilter, "dd/MM/yyyy", { locale: ptBR }) : "Filtrar por data"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={dateFilter}
+                onSelect={setDateFilter}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+                locale={ptBR}
+              />
+            </PopoverContent>
+          </Popover>
+
+          {dateFilter && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setDateFilter(undefined)}
+              className="shrink-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="active" className="w-full">
-        <TabsList className="bg-muted/50">
-          <TabsTrigger value="active" className="gap-2">
-            <UserPlus className="w-4 h-4" />
-            Ativas
-          </TabsTrigger>
-          <TabsTrigger value="history" className="gap-2">
-            <History className="w-4 h-4" />
-            Histórico
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="active" className="mt-6">
-          <div className="grid gap-3">
-            {(() => {
-              const filtered = allocations
-                .filter(a => !a.returnedAt)
-                .filter(a => {
-                  const matchesSearch = searchTerm === '' || 
-                    a.employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    a.equipment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    a.equipment.serialNumber.toLowerCase().includes(searchTerm.toLowerCase());
-                  const matchesDepartment = departmentFilter === 'all' || a.employee.department === departmentFilter;
-                  return matchesSearch && matchesDepartment;
-                });
+      {/* Allocations List */}
+      <div className="grid gap-3">
+        {(() => {
+          const filtered = allocations
+            .filter(a => {
+              // Status filter
+              if (statusFilter === 'active') return !a.returnedAt;
+              if (statusFilter === 'returned') return !!a.returnedAt;
+              return true;
+            })
+            .filter(a => {
+              const matchesSearch = searchTerm === '' || 
+                a.employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                a.equipment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                a.equipment.serialNumber.toLowerCase().includes(searchTerm.toLowerCase());
+              const matchesDepartment = departmentFilter === 'all' || a.employee.department === departmentFilter;
               
-              return filtered.length > 0 ? (
-                filtered.map(allocation => (
-                  <div key={allocation.id} className="card-minimal flex flex-col sm:flex-row sm:items-center gap-4">
-                    <div className="flex items-center gap-4 flex-1">
-                      <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center">
-                        <span className="text-sm font-semibold text-primary-foreground">
-                          {allocation.employee.name.charAt(0)}
-                        </span>
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-foreground">{allocation.employee.name}</h3>
-                        <p className="text-sm text-muted-foreground">{allocation.employee.role}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
-                        <CategoryIcon category={allocation.equipment.category} className="w-5 h-5 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">{allocation.equipment.name}</p>
-                        <p className="text-xs text-muted-foreground">{allocation.equipment.serialNumber}</p>
-                      </div>
-                    </div>
-
-                    <div className="text-sm text-muted-foreground">
-                      {new Date(allocation.allocatedAt).toLocaleDateString('pt-BR')}
-                    </div>
+              // Date filter - matches allocatedAt date
+              let matchesDate = true;
+              if (dateFilter) {
+                const allocationDate = new Date(a.allocatedAt);
+                matchesDate = 
+                  allocationDate.getFullYear() === dateFilter.getFullYear() &&
+                  allocationDate.getMonth() === dateFilter.getMonth() &&
+                  allocationDate.getDate() === dateFilter.getDate();
+              }
+              
+              return matchesSearch && matchesDepartment && matchesDate;
+            });
+          
+          return filtered.length > 0 ? (
+            filtered.map(allocation => (
+              <div key={allocation.id} className={cn(
+                "card-minimal flex flex-col sm:flex-row sm:items-center gap-4",
+                allocation.returnedAt && "opacity-70"
+              )}>
+                <div className="flex items-center gap-4 flex-1">
+                  <div className={cn(
+                    "w-11 h-11 rounded-full flex items-center justify-center",
+                    allocation.returnedAt ? "bg-muted" : "bg-primary"
+                  )}>
+                    <span className={cn(
+                      "text-sm font-semibold",
+                      allocation.returnedAt ? "text-muted-foreground" : "text-primary-foreground"
+                    )}>
+                      {allocation.employee.name.charAt(0)}
+                    </span>
                   </div>
-                ))
-              ) : (
-                <div className="card-minimal text-center py-12">
-                  <p className="text-muted-foreground">Nenhuma alocação ativa encontrada</p>
+                  <div>
+                    <h3 className="font-medium text-foreground">{allocation.employee.name}</h3>
+                    <p className="text-sm text-muted-foreground">{allocation.employee.role}</p>
+                  </div>
                 </div>
-              );
-            })()}
-          </div>
-        </TabsContent>
 
-        <TabsContent value="history" className="mt-6">
-          <div className="grid gap-3">
-            {(() => {
-              const filtered = allocations
-                .filter(a => a.returnedAt)
-                .filter(a => {
-                  const matchesSearch = searchTerm === '' || 
-                    a.employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    a.equipment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    a.equipment.serialNumber.toLowerCase().includes(searchTerm.toLowerCase());
-                  const matchesDepartment = departmentFilter === 'all' || a.employee.department === departmentFilter;
-                  return matchesSearch && matchesDepartment;
-                });
-              
-              return filtered.length > 0 ? (
-                filtered
-                .filter(a => a.returnedAt)
-                .map(allocation => (
-                  <div key={allocation.id} className="card-minimal flex flex-col sm:flex-row sm:items-center gap-4 opacity-70">
-                    <div className="flex items-center gap-4 flex-1">
-                      <div className="w-11 h-11 rounded-full bg-muted flex items-center justify-center">
-                        <span className="text-sm font-semibold text-muted-foreground">
-                          {allocation.employee.name.charAt(0)}
-                        </span>
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-foreground">{allocation.employee.name}</h3>
-                        <p className="text-sm text-muted-foreground">{allocation.employee.role}</p>
-                      </div>
-                    </div>
+                <div className="flex items-center gap-3 flex-1">
+                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                    <CategoryIcon category={allocation.equipment.category} className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">{allocation.equipment.name}</p>
+                    <p className="text-xs text-muted-foreground">{allocation.equipment.serialNumber}</p>
+                  </div>
+                </div>
 
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
-                        <CategoryIcon category={allocation.equipment.category} className="w-5 h-5 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">{allocation.equipment.name}</p>
-                        <p className="text-xs text-muted-foreground">{allocation.equipment.serialNumber}</p>
-                      </div>
-                    </div>
-
-                    <div className="text-sm text-muted-foreground text-right">
-                      <p>{new Date(allocation.allocatedAt).toLocaleDateString('pt-BR')} → {new Date(allocation.returnedAt!).toLocaleDateString('pt-BR')}</p>
-                      <span className="text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <div className="text-sm text-muted-foreground text-right">
+                  {allocation.returnedAt ? (
+                    <>
+                      <p>{new Date(allocation.allocatedAt).toLocaleDateString('pt-BR')} → {new Date(allocation.returnedAt).toLocaleDateString('pt-BR')}</p>
+                      <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
                         Devolvido
                       </span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="card-minimal text-center py-12">
-                  <p className="text-muted-foreground">Nenhum histórico encontrado</p>
+                    </>
+                  ) : (
+                    <>
+                      <p>{new Date(allocation.allocatedAt).toLocaleDateString('pt-BR')}</p>
+                      <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+                        Ativa
+                      </span>
+                    </>
+                  )}
                 </div>
-              );
-            })()}
-          </div>
-        </TabsContent>
-      </Tabs>
+              </div>
+            ))
+          ) : (
+            <div className="card-minimal text-center py-12">
+              <p className="text-muted-foreground">Nenhuma alocação encontrada</p>
+            </div>
+          );
+        })()}
+      </div>
 
       {/* Onboarding Dialog */}
       <Dialog open={isOnboardingOpen} onOpenChange={setIsOnboardingOpen}>
