@@ -1,73 +1,122 @@
-# Welcome to your Lovable project
+# Yellow Kite - Sistema de Gestão de Equipamentos
 
-## Project info
+Sistema web interno para gerenciamento de equipamentos de TI, substituindo controle por planilhas com rastreabilidade, controle de custos e formalização de entrada/saída de equipamentos.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 🎯 Objetivo
 
-## How can I edit this code?
+MVP de sistema de gestão de equipamentos para a agência Yellow Kite, atendendo 47 colaboradores. Interface web responsiva com visual limpo, minimalista e profissional.
 
-There are several ways of editing your application.
+## 🛠️ Stack Tecnológico
 
-**Use Lovable**
+- **React** + **Vite** - Framework e bundler
+- **TypeScript** - Tipagem estática
+- **Tailwind CSS** - Estilização
+- **shadcn/ui** - Componentes de UI
+- **React Router** - Navegação
+- **TanStack Query** - Gerenciamento de estado assíncrono
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## 📁 Estrutura do Projeto
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+src/
+├── components/
+│   ├── layout/
+│   │   ├── AppSidebar.tsx      # Sidebar de navegação
+│   │   └── MainLayout.tsx      # Layout principal com sidebar
+│   ├── ui/                     # Componentes shadcn/ui
+│   │   ├── button.tsx
+│   │   ├── card.tsx
+│   │   ├── dialog.tsx
+│   │   ├── select.tsx
+│   │   └── ...
+│   ├── CategoryIcon.tsx        # Ícones por categoria
+│   ├── NavLink.tsx             # Links de navegação
+│   └── StatusBadge.tsx         # Badges de status
+├── hooks/
+│   ├── use-mobile.tsx          # Hook para detecção mobile
+│   └── use-toast.ts            # Hook para notificações
+├── integrations/
+│   └── supabase/
+│       └── placeholder.ts      # Placeholder para integração futura
+├── lib/
+│   └── utils.ts                # Utilitários (cn, etc)
+├── mock/
+│   └── db.ts                   # Dados mock para desenvolvimento
+├── pages/
+│   ├── Allocations.tsx         # Página de alocações
+│   ├── Dashboard.tsx           # Página inicial com métricas
+│   ├── Employees.tsx           # Gestão de colaboradores
+│   ├── Index.tsx               # Landing page
+│   ├── Inventory.tsx           # Inventário de equipamentos
+│   └── NotFound.tsx            # Página 404
+├── services/
+│   ├── allocationService.ts    # Serviço de alocações
+│   ├── employeeService.ts      # Serviço de colaboradores
+│   └── equipmentService.ts     # Serviço de equipamentos
+├── types/
+│   └── index.ts                # Tipos TypeScript
+├── App.tsx                     # Componente raiz com rotas
+├── App.css                     # Estilos globais
+├── index.css                   # Design system e tokens
+└── main.tsx                    # Entry point
 ```
 
-**Edit a file directly in GitHub**
+## 📦 Módulos
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### 1. Dashboard
+- Total de ativos
+- Valor total investido
+- Distribuição por status (Disponível, Alocado, Manutenção)
+- Visão geral rápida
 
-**Use GitHub Codespaces**
+### 2. Inventário
+- CRUD completo de equipamentos
+- Categorias: Notebook, Monitor, Teclado, Mouse, Headset, Webcam, Outro
+- Status: Disponível, Alocado, Manutenção
+- Campos: Nome, Categoria, Número de Série, Valor, Data de Compra
+- Filtros por categoria e status
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### 3. Colaboradores
+- CRUD completo de funcionários
+- Departamentos: Criação, Performance, Audio Visual, Rocket, Lead Zeppelin, Engenharia de Soluções, Growth e Tecnologia, Financeiro, RH
+- Campos: Nome, Cargo, Email, Departamento
+- Filtros por departamento e busca
 
-## What technologies are used for this project?
+### 4. Alocações
+- Fluxo de Onboarding (entrega de equipamentos)
+- Fluxo de Offboarding (devolução)
+- Histórico de movimentações
+- Geração de Termo de Responsabilidade
 
-This project is built with:
+## 🎨 Design System
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Identidade visual Yellow Kite:
+- **Fundo principal**: Branco/claro (#ffffff, #f9f9f9)
+- **Cor de destaque**: Amarelo (#edab26)
+- **Design**: Minimalista e limpo
+- **Tipografia**: Texto escuro sobre fundos claros
 
-## How can I deploy this project?
+## 🚀 Como Executar
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+```bash
+# Instalar dependências
+npm install
 
-## Can I connect a custom domain to my Lovable project?
+# Iniciar servidor de desenvolvimento
+npm run dev
 
-Yes, you can!
+# Build para produção
+npm run build
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 📋 Próximos Passos
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- [ ] Integração com Lovable Cloud (Supabase) para persistência
+- [ ] Autenticação de usuários (RH)
+- [ ] Upload de imagens de equipamentos
+- [ ] Relatórios e exportação de dados
+- [ ] Notificações de manutenção
+
+## 📄 Licença
+
+Projeto interno Yellow Kite - Todos os direitos reservados.
