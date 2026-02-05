@@ -22,7 +22,6 @@ import { employeeService } from '@/services/employeeService';
 import { equipmentService } from '@/services/equipmentService';
 import { allocationService } from '@/services/allocationService';
 import { Employee, Equipment, AllocationWithDetails } from '@/types';
-import { StatusBadge } from '@/components/ui/StatusBadge';
 import { CategoryIcon } from '@/components/ui/CategoryIcon';
 import { toast } from 'sonner';
 
@@ -142,7 +141,7 @@ export default function Allocations() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
       </div>
     );
   }
@@ -151,8 +150,8 @@ export default function Allocations() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Alocações</h1>
-          <p className="text-muted-foreground">Gerencie entrega e devolução de equipamentos</p>
+          <h1 className="text-2xl font-semibold text-foreground">Alocações</h1>
+          <p className="text-muted-foreground">Entrega e devolução de equipamentos</p>
         </div>
 
         <div className="flex gap-3">
@@ -169,10 +168,10 @@ export default function Allocations() {
 
       {/* Tabs */}
       <Tabs defaultValue="active" className="w-full">
-        <TabsList>
+        <TabsList className="bg-muted/50">
           <TabsTrigger value="active" className="gap-2">
             <UserPlus className="w-4 h-4" />
-            Alocações Ativas
+            Ativas
           </TabsTrigger>
           <TabsTrigger value="history" className="gap-2">
             <History className="w-4 h-4" />
@@ -181,87 +180,87 @@ export default function Allocations() {
         </TabsList>
 
         <TabsContent value="active" className="mt-6">
-          <div className="grid gap-4">
+          <div className="grid gap-3">
             {allocations.filter(a => !a.returnedAt).length > 0 ? (
               allocations
                 .filter(a => !a.returnedAt)
                 .map(allocation => (
-                  <div key={allocation.id} className="card-dark flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div key={allocation.id} className="card-minimal flex flex-col sm:flex-row sm:items-center gap-4">
                     <div className="flex items-center gap-4 flex-1">
-                      <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
-                        <span className="text-lg font-bold text-primary-foreground">
+                      <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center">
+                        <span className="text-sm font-semibold text-primary-foreground">
                           {allocation.employee.name.charAt(0)}
                         </span>
                       </div>
                       <div>
-                        <h3 className="font-semibold text-card-foreground">{allocation.employee.name}</h3>
-                        <p className="text-sm text-card-foreground/60">{allocation.employee.role}</p>
+                        <h3 className="font-medium text-foreground">{allocation.employee.name}</h3>
+                        <p className="text-sm text-muted-foreground">{allocation.employee.role}</p>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-3 flex-1">
-                      <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                        <CategoryIcon category={allocation.equipment.category} className="w-5 h-5 text-primary" />
+                      <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                        <CategoryIcon category={allocation.equipment.category} className="w-5 h-5 text-muted-foreground" />
                       </div>
                       <div>
-                        <p className="font-medium text-card-foreground">{allocation.equipment.name}</p>
-                        <p className="text-xs text-card-foreground/60">{allocation.equipment.serialNumber}</p>
+                        <p className="font-medium text-foreground">{allocation.equipment.name}</p>
+                        <p className="text-xs text-muted-foreground">{allocation.equipment.serialNumber}</p>
                       </div>
                     </div>
 
-                    <div className="text-sm text-card-foreground/60">
-                      Alocado em: {new Date(allocation.allocatedAt).toLocaleDateString('pt-BR')}
+                    <div className="text-sm text-muted-foreground">
+                      {new Date(allocation.allocatedAt).toLocaleDateString('pt-BR')}
                     </div>
                   </div>
                 ))
             ) : (
-              <div className="card-dark text-center py-12">
-                <p className="text-card-foreground/60">Nenhuma alocação ativa</p>
+              <div className="card-minimal text-center py-12">
+                <p className="text-muted-foreground">Nenhuma alocação ativa</p>
               </div>
             )}
           </div>
         </TabsContent>
 
         <TabsContent value="history" className="mt-6">
-          <div className="grid gap-4">
+          <div className="grid gap-3">
             {allocations.filter(a => a.returnedAt).length > 0 ? (
               allocations
                 .filter(a => a.returnedAt)
                 .map(allocation => (
-                  <div key={allocation.id} className="card-dark flex flex-col sm:flex-row sm:items-center gap-4 opacity-75">
+                  <div key={allocation.id} className="card-minimal flex flex-col sm:flex-row sm:items-center gap-4 opacity-70">
                     <div className="flex items-center gap-4 flex-1">
-                      <div className="w-12 h-12 rounded-full bg-card-foreground/20 flex items-center justify-center">
-                        <span className="text-lg font-bold text-card-foreground/60">
+                      <div className="w-11 h-11 rounded-full bg-muted flex items-center justify-center">
+                        <span className="text-sm font-semibold text-muted-foreground">
                           {allocation.employee.name.charAt(0)}
                         </span>
                       </div>
                       <div>
-                        <h3 className="font-semibold text-card-foreground">{allocation.employee.name}</h3>
-                        <p className="text-sm text-card-foreground/60">{allocation.employee.role}</p>
+                        <h3 className="font-medium text-foreground">{allocation.employee.name}</h3>
+                        <p className="text-sm text-muted-foreground">{allocation.employee.role}</p>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-3 flex-1">
-                      <div className="w-10 h-10 rounded-lg bg-card-foreground/10 flex items-center justify-center">
-                        <CategoryIcon category={allocation.equipment.category} className="w-5 h-5 text-card-foreground/60" />
+                      <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                        <CategoryIcon category={allocation.equipment.category} className="w-5 h-5 text-muted-foreground" />
                       </div>
                       <div>
-                        <p className="font-medium text-card-foreground">{allocation.equipment.name}</p>
-                        <p className="text-xs text-card-foreground/60">{allocation.equipment.serialNumber}</p>
+                        <p className="font-medium text-foreground">{allocation.equipment.name}</p>
+                        <p className="text-xs text-muted-foreground">{allocation.equipment.serialNumber}</p>
                       </div>
                     </div>
 
-                    <div className="text-sm text-card-foreground/60 text-right">
+                    <div className="text-sm text-muted-foreground text-right">
                       <p>{new Date(allocation.allocatedAt).toLocaleDateString('pt-BR')} → {new Date(allocation.returnedAt!).toLocaleDateString('pt-BR')}</p>
-                      <span className="text-xs px-2 py-0.5 rounded bg-status-available/20 text-status-available">
+                      <span className="text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                         Devolvido
                       </span>
                     </div>
                   </div>
                 ))
             ) : (
-              <div className="card-dark text-center py-12">
-                <p className="text-card-foreground/60">Nenhum histórico de devolução</p>
+              <div className="card-minimal text-center py-12">
+                <p className="text-muted-foreground">Nenhum histórico de devolução</p>
               </div>
             )}
           </div>
@@ -294,12 +293,12 @@ export default function Allocations() {
 
             <div className="space-y-2">
               <Label>Equipamentos Disponíveis</Label>
-              <div className="max-h-[200px] overflow-y-auto border rounded-lg p-2 space-y-2">
+              <div className="max-h-[200px] overflow-y-auto border rounded-xl p-2 space-y-2">
                 {availableEquipments.length > 0 ? (
                   availableEquipments.map(eq => (
                     <div
                       key={eq.id}
-                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted cursor-pointer"
+                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
                       onClick={() => handleToggleEquipment(eq.id)}
                     >
                       <Checkbox checked={selectedEquipments.includes(eq.id)} />
@@ -344,7 +343,7 @@ export default function Allocations() {
       <Dialog open={isOffboardingOpen} onOpenChange={setIsOffboardingOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Offboarding - Devolução de Equipamento</DialogTitle>
+            <DialogTitle>Offboarding - Devolução</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-6 mt-4">
@@ -366,7 +365,7 @@ export default function Allocations() {
 
             {selectedEmployee && (
               <div className="space-y-2">
-                <Label>Equipamento para Devolução</Label>
+                <Label>Equipamento</Label>
                 <Select value={selectedAllocation} onValueChange={setSelectedAllocation}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o equipamento" />
@@ -380,7 +379,7 @@ export default function Allocations() {
                   </SelectContent>
                 </Select>
                 {activeAllocations.length === 0 && (
-                  <p className="text-sm text-muted-foreground">Este colaborador não possui equipamentos alocados</p>
+                  <p className="text-sm text-muted-foreground">Nenhum equipamento alocado</p>
                 )}
               </div>
             )}
@@ -416,7 +415,7 @@ export default function Allocations() {
             </DialogTitle>
           </DialogHeader>
           <div className="mt-4">
-            <pre className="bg-muted p-4 rounded-lg text-xs font-mono whitespace-pre-wrap overflow-auto max-h-[400px]">
+            <pre className="bg-muted p-4 rounded-xl text-xs font-mono whitespace-pre-wrap overflow-auto max-h-[400px]">
               {termPreview}
             </pre>
             <div className="flex justify-end gap-3 mt-4">
@@ -425,7 +424,7 @@ export default function Allocations() {
               </Button>
               <Button onClick={() => {
                 navigator.clipboard.writeText(termPreview);
-                toast.success('Termo copiado para a área de transferência!');
+                toast.success('Termo copiado!');
               }}>
                 Copiar Termo
               </Button>

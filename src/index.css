@@ -2,61 +2,61 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Yellow Kite Equipment Management System - Design System */
+/* Yellow Kite Equipment Management System - Minimal Design System */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 @layer base {
   :root {
-    /* Core Colors - Yellow Kite Brand */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 16%;
+    /* Core Colors - Clean & Minimal */
+    --background: 0 0% 98%;
+    --foreground: 0 0% 15%;
 
-    /* Card/Container: Graphite Dark #2a2a2a */
-    --card: 0 0% 16%;
-    --card-foreground: 0 0% 100%;
+    /* Card/Container: White with subtle border */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 16%;
+    --popover-foreground: 0 0% 15%;
 
     /* Primary: Yellow Kite #edab26 */
     --primary: 41 84% 54%;
-    --primary-foreground: 0 0% 10%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Secondary: Light gray */
+    /* Secondary: Very light gray */
     --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 16%;
+    --secondary-foreground: 0 0% 25%;
 
     /* Muted */
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 45%;
 
-    /* Accent: Yellow tint */
-    --accent: 41 84% 94%;
-    --accent-foreground: 41 84% 30%;
+    /* Accent: Soft yellow tint */
+    --accent: 41 50% 96%;
+    --accent-foreground: 41 84% 35%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
+    --border: 0 0% 92%;
+    --input: 0 0% 92%;
     --ring: 41 84% 54%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
     /* Status Colors */
     --status-available: 142 71% 45%;
     --status-allocated: 217 91% 60%;
     --status-maintenance: 41 84% 54%;
 
-    /* Sidebar */
-    --sidebar-background: 0 0% 16%;
-    --sidebar-foreground: 0 0% 100%;
+    /* Sidebar - Clean light version */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 25%;
     --sidebar-primary: 41 84% 54%;
-    --sidebar-primary-foreground: 0 0% 10%;
-    --sidebar-accent: 0 0% 22%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 25%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 15%;
+    --sidebar-border: 0 0% 92%;
     --sidebar-ring: 41 84% 54%;
   }
 }
@@ -74,22 +74,22 @@
 
 @layer components {
   .status-badge-available {
-    @apply bg-[hsl(var(--status-available))] text-white;
+    @apply bg-emerald-50 text-emerald-700 border border-emerald-200;
   }
 
   .status-badge-allocated {
-    @apply bg-[hsl(var(--status-allocated))] text-white;
+    @apply bg-blue-50 text-blue-700 border border-blue-200;
   }
 
   .status-badge-maintenance {
-    @apply bg-[hsl(var(--status-maintenance))] text-black;
+    @apply bg-amber-50 text-amber-700 border border-amber-200;
   }
 
-  .card-dark {
-    @apply bg-card text-card-foreground rounded-lg p-6 shadow-lg;
+  .card-minimal {
+    @apply bg-card text-card-foreground rounded-xl p-6 border border-border;
   }
 
   .stat-card {
-    @apply bg-card text-card-foreground rounded-xl p-6 shadow-lg transition-transform hover:scale-[1.02];
+    @apply bg-card text-card-foreground rounded-xl p-6 border border-border transition-all hover:shadow-md hover:border-primary/30;
   }
 }

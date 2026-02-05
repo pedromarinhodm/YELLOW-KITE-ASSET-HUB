@@ -127,7 +127,7 @@ export default function Employees() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
       </div>
     );
   }
@@ -136,8 +136,8 @@ export default function Employees() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Colaboradores</h1>
-          <p className="text-muted-foreground">Gerencie os colaboradores da empresa</p>
+          <h1 className="text-2xl font-semibold text-foreground">Colaboradores</h1>
+          <p className="text-muted-foreground">Gerencie os colaboradores</p>
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -226,29 +226,29 @@ export default function Employees() {
       </div>
 
       {/* Employee List */}
-      <div className="grid gap-4">
+      <div className="grid gap-3">
         {filteredEmployees.length > 0 ? (
           filteredEmployees.map(employee => (
             <div
               key={employee.id}
-              className="card-dark flex flex-col sm:flex-row sm:items-center gap-4"
+              className="card-minimal flex flex-col sm:flex-row sm:items-center gap-4 hover:border-primary/30 transition-colors"
             >
               <div className="flex items-center gap-4 flex-1">
-                <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
-                  <span className="text-lg font-bold text-primary-foreground">
+                <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center">
+                  <span className="text-sm font-semibold text-primary-foreground">
                     {employee.name.charAt(0)}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-card-foreground truncate">{employee.name}</h3>
-                  <p className="text-sm text-card-foreground/60">{employee.role}</p>
+                  <h3 className="font-medium text-foreground truncate">{employee.name}</h3>
+                  <p className="text-sm text-muted-foreground">{employee.role}</p>
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-4 text-sm text-card-foreground/60">
+              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1.5">
                   <Mail className="w-4 h-4" />
-                  <span className="truncate max-w-[200px]">{employee.email}</span>
+                  <span className="truncate max-w-[180px]">{employee.email}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Building className="w-4 h-4" />
@@ -256,12 +256,12 @@ export default function Employees() {
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-1">
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => handleViewAllocations(employee)}
-                  className="text-primary/60 hover:text-primary hover:bg-primary/10"
+                  className="h-9 w-9 text-muted-foreground hover:text-primary"
                 >
                   <Monitor className="w-4 h-4" />
                 </Button>
@@ -269,7 +269,7 @@ export default function Employees() {
                   variant="ghost"
                   size="icon"
                   onClick={() => handleOpenDialog(employee)}
-                  className="text-card-foreground/60 hover:text-card-foreground hover:bg-card-foreground/10"
+                  className="h-9 w-9 text-muted-foreground hover:text-foreground"
                 >
                   <Edit2 className="w-4 h-4" />
                 </Button>
@@ -277,7 +277,7 @@ export default function Employees() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setDeleteId(employee.id)}
-                  className="text-destructive/60 hover:text-destructive hover:bg-destructive/10"
+                  className="h-9 w-9 text-muted-foreground hover:text-destructive"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -285,8 +285,8 @@ export default function Employees() {
             </div>
           ))
         ) : (
-          <div className="card-dark text-center py-12">
-            <p className="text-card-foreground/60">Nenhum colaborador encontrado</p>
+          <div className="card-minimal text-center py-12">
+            <p className="text-muted-foreground">Nenhum colaborador encontrado</p>
           </div>
         )}
       </div>
@@ -302,7 +302,7 @@ export default function Employees() {
               employeeAllocations.map(allocation => (
                 <div
                   key={allocation.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-muted"
+                  className="flex items-center justify-between p-4 rounded-xl bg-muted"
                 >
                   <div>
                     <p className="font-medium">{allocation.equipment.name}</p>

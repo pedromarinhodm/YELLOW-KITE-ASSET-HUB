@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { 
   Monitor, 
   Users, 
-  CheckCircle, 
   AlertTriangle,
   DollarSign,
-  TrendingUp
+  TrendingUp,
+  Package
 } from 'lucide-react';
 import { equipmentService } from '@/services/equipmentService';
 import { employeeService } from '@/services/employeeService';
@@ -62,16 +62,16 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-8 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground">Visão geral do inventário de equipamentos</p>
+        <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
+        <p className="text-muted-foreground">Visão geral do inventário</p>
       </div>
 
       {/* Stats Grid */}
@@ -79,11 +79,11 @@ export default function Dashboard() {
         <div className="stat-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-card-foreground/60">Total de Ativos</p>
-              <p className="text-3xl font-bold text-card-foreground">{stats.totalEquipments}</p>
+              <p className="text-sm text-muted-foreground">Total de Ativos</p>
+              <p className="text-3xl font-semibold text-foreground mt-1">{stats.totalEquipments}</p>
             </div>
-            <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center">
-              <Monitor className="w-6 h-6 text-primary" />
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Package className="w-6 h-6 text-primary" />
             </div>
           </div>
         </div>
@@ -91,13 +91,13 @@ export default function Dashboard() {
         <div className="stat-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-card-foreground/60">Valor Total</p>
-              <p className="text-3xl font-bold text-card-foreground">
+              <p className="text-sm text-muted-foreground">Valor Total</p>
+              <p className="text-3xl font-semibold text-foreground mt-1">
                 R$ {stats.totalValue.toLocaleString('pt-BR')}
               </p>
             </div>
-            <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-primary" />
+            <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-emerald-600" />
             </div>
           </div>
         </div>
@@ -105,11 +105,11 @@ export default function Dashboard() {
         <div className="stat-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-card-foreground/60">Colaboradores</p>
-              <p className="text-3xl font-bold text-card-foreground">{stats.totalEmployees}</p>
+              <p className="text-sm text-muted-foreground">Colaboradores</p>
+              <p className="text-3xl font-semibold text-foreground mt-1">{stats.totalEmployees}</p>
             </div>
-            <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center">
-              <Users className="w-6 h-6 text-primary" />
+            <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
+              <Users className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>
@@ -117,11 +117,11 @@ export default function Dashboard() {
         <div className="stat-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-card-foreground/60">Taxa de Alocação</p>
-              <p className="text-3xl font-bold text-card-foreground">{allocatedPercentage}%</p>
+              <p className="text-sm text-muted-foreground">Taxa de Alocação</p>
+              <p className="text-3xl font-semibold text-foreground mt-1">{allocatedPercentage}%</p>
             </div>
-            <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-primary" />
+            <div className="w-12 h-12 rounded-xl bg-violet-50 flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-violet-600" />
             </div>
           </div>
         </div>
@@ -129,45 +129,45 @@ export default function Dashboard() {
 
       {/* Status Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="card-dark">
-          <h2 className="text-lg font-semibold text-card-foreground mb-4">Status dos Equipamentos</h2>
+        <div className="card-minimal">
+          <h2 className="text-base font-semibold text-foreground mb-6">Status dos Equipamentos</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-status-available"></div>
-                <span className="text-card-foreground/80">Disponível</span>
+                <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                <span className="text-muted-foreground">Disponível</span>
               </div>
-              <span className="font-semibold text-card-foreground">{stats.available}</span>
+              <span className="font-medium text-foreground">{stats.available}</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-status-allocated"></div>
-                <span className="text-card-foreground/80">Alocado</span>
+                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                <span className="text-muted-foreground">Alocado</span>
               </div>
-              <span className="font-semibold text-card-foreground">{stats.allocated}</span>
+              <span className="font-medium text-foreground">{stats.allocated}</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-status-maintenance"></div>
-                <span className="text-card-foreground/80">Manutenção</span>
+                <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                <span className="text-muted-foreground">Manutenção</span>
               </div>
-              <span className="font-semibold text-card-foreground">{stats.maintenance}</span>
+              <span className="font-medium text-foreground">{stats.maintenance}</span>
             </div>
           </div>
 
           {/* Progress Bar */}
           <div className="mt-6">
-            <div className="h-3 rounded-full bg-card-foreground/10 overflow-hidden flex">
+            <div className="h-2 rounded-full bg-muted overflow-hidden flex">
               <div 
-                className="bg-status-available transition-all"
+                className="bg-emerald-500 transition-all"
                 style={{ width: `${(stats.available / stats.totalEquipments) * 100}%` }}
               />
               <div 
-                className="bg-status-allocated transition-all"
+                className="bg-blue-500 transition-all"
                 style={{ width: `${(stats.allocated / stats.totalEquipments) * 100}%` }}
               />
               <div 
-                className="bg-status-maintenance transition-all"
+                className="bg-amber-500 transition-all"
                 style={{ width: `${(stats.maintenance / stats.totalEquipments) * 100}%` }}
               />
             </div>
@@ -175,21 +175,21 @@ export default function Dashboard() {
         </div>
 
         {/* Alerts */}
-        <div className="card-dark">
-          <h2 className="text-lg font-semibold text-card-foreground mb-4">Alertas</h2>
+        <div className="card-minimal">
+          <h2 className="text-base font-semibold text-foreground mb-6">Alertas</h2>
           <div className="space-y-3">
             {stats.maintenance > 0 ? (
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-status-maintenance/20">
-                <AlertTriangle className="w-5 h-5 text-status-maintenance" />
-                <span className="text-card-foreground">
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-amber-50 border border-amber-100">
+                <AlertTriangle className="w-5 h-5 text-amber-600" />
+                <span className="text-amber-800">
                   {stats.maintenance} equipamento(s) em manutenção
                 </span>
               </div>
             ) : (
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-status-available/20">
-                <CheckCircle className="w-5 h-5 text-status-available" />
-                <span className="text-card-foreground">
-                  Nenhum equipamento em manutenção
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-100">
+                <Monitor className="w-5 h-5 text-emerald-600" />
+                <span className="text-emerald-800">
+                  Todos os equipamentos operacionais
                 </span>
               </div>
             )}
@@ -198,34 +198,34 @@ export default function Dashboard() {
       </div>
 
       {/* Recent Allocations */}
-      <div className="card-dark">
-        <h2 className="text-lg font-semibold text-card-foreground mb-4">Últimas Alocações</h2>
+      <div className="card-minimal">
+        <h2 className="text-base font-semibold text-foreground mb-6">Últimas Alocações</h2>
         {recentAllocations.length > 0 ? (
           <div className="space-y-3">
             {recentAllocations.map((allocation) => (
               <div 
                 key={allocation.id}
-                className="flex items-center justify-between p-3 rounded-lg bg-card-foreground/5"
+                className="flex items-center justify-between p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                    <span className="text-primary font-semibold">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-primary font-medium">
                       {allocation.employee.name.charAt(0)}
                     </span>
                   </div>
                   <div>
-                    <p className="font-medium text-card-foreground">{allocation.employee.name}</p>
-                    <p className="text-sm text-card-foreground/60">{allocation.equipment.name}</p>
+                    <p className="font-medium text-foreground">{allocation.employee.name}</p>
+                    <p className="text-sm text-muted-foreground">{allocation.equipment.name}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-card-foreground/60">
+                  <p className="text-sm text-muted-foreground">
                     {new Date(allocation.allocatedAt).toLocaleDateString('pt-BR')}
                   </p>
-                  <span className={`text-xs px-2 py-0.5 rounded ${
+                  <span className={`text-xs px-2 py-1 rounded-full ${
                     allocation.returnedAt 
-                      ? 'bg-status-available/20 text-status-available' 
-                      : 'bg-status-allocated/20 text-status-allocated'
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                      : 'bg-blue-50 text-blue-700 border border-blue-200'
                   }`}>
                     {allocation.returnedAt ? 'Devolvido' : 'Ativo'}
                   </span>
@@ -234,7 +234,7 @@ export default function Dashboard() {
             ))}
           </div>
         ) : (
-          <p className="text-card-foreground/60 text-center py-8">Nenhuma alocação registrada</p>
+          <p className="text-muted-foreground text-center py-8">Nenhuma alocação registrada</p>
         )}
       </div>
     </div>
