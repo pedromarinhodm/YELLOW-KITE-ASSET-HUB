@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { UserPlus, UserMinus, FileText, History } from 'lucide-react';
+import { UserPlus, UserMinus, FileText, History, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -30,6 +31,10 @@ export default function Allocations() {
   const [availableEquipments, setAvailableEquipments] = useState<Equipment[]>([]);
   const [allocations, setAllocations] = useState<AllocationWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Filters
+  const [searchTerm, setSearchTerm] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState('all');
 
   // Onboarding state
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
@@ -166,6 +171,36 @@ export default function Allocations() {
         </div>
       </div>
 
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por colaborador ou equipamento..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+          <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectValue placeholder="Departamento" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os departamentos</SelectItem>
+            <SelectItem value="Criação">Criação</SelectItem>
+            <SelectItem value="Performance">Performance</SelectItem>
+            <SelectItem value="Audio Visual">Audio Visual</SelectItem>
+            <SelectItem value="Rocket">Rocket</SelectItem>
+            <SelectItem value="Lead Zeppelin">Lead Zeppelin</SelectItem>
+            <SelectItem value="Engenharia de Soluções">Engenharia de Soluções</SelectItem>
+            <SelectItem value="Growth e Tecnologia">Growth e Tecnologia</SelectItem>
+            <SelectItem value="Financeiro">Financeiro</SelectItem>
+            <SelectItem value="RH">RH</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* Tabs */}
       <Tabs defaultValue="active" className="w-full">
         <TabsList className="bg-muted/50">
@@ -181,10 +216,20 @@ export default function Allocations() {
 
         <TabsContent value="active" className="mt-6">
           <div className="grid gap-3">
-            {allocations.filter(a => !a.returnedAt).length > 0 ? (
-              allocations
+            {(() => {
+              const filtered = allocations
                 .filter(a => !a.returnedAt)
-                .map(allocation => (
+                .filter(a => {
+                  const matchesSearch = searchTerm === '' || 
+                    a.employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    a.equipment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    a.equipment.serialNumber.toLowerCase().includes(searchTerm.toLowerCase());
+                  const matchesDepartment = departmentFilter === 'all' || a.employee.department === departmentFilter;
+                  return matchesSearch && matchesDepartment;
+                });
+              
+              return filtered.length > 0 ? (
+                filtered.map(allocation => (
                   <div key={allocation.id} className="card-minimal flex flex-col sm:flex-row sm:items-center gap-4">
                     <div className="flex items-center gap-4 flex-1">
                       <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center">
@@ -213,18 +258,31 @@ export default function Allocations() {
                     </div>
                   </div>
                 ))
-            ) : (
-              <div className="card-minimal text-center py-12">
-                <p className="text-muted-foreground">Nenhuma alocação ativa</p>
-              </div>
-            )}
+              ) : (
+                <div className="card-minimal text-center py-12">
+                  <p className="text-muted-foreground">Nenhuma alocação ativa encontrada</p>
+                </div>
+              );
+            })()}
           </div>
         </TabsContent>
 
         <TabsContent value="history" className="mt-6">
           <div className="grid gap-3">
-            {allocations.filter(a => a.returnedAt).length > 0 ? (
-              allocations
+            {(() => {
+              const filtered = allocations
+                .filter(a => a.returnedAt)
+                .filter(a => {
+                  const matchesSearch = searchTerm === '' || 
+                    a.employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    a.equipment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    a.equipment.serialNumber.toLowerCase().includes(searchTerm.toLowerCase());
+                  const matchesDepartment = departmentFilter === 'all' || a.employee.department === departmentFilter;
+                  return matchesSearch && matchesDepartment;
+                });
+              
+              return filtered.length > 0 ? (
+                filtered
                 .filter(a => a.returnedAt)
                 .map(allocation => (
                   <div key={allocation.id} className="card-minimal flex flex-col sm:flex-row sm:items-center gap-4 opacity-70">
@@ -258,11 +316,12 @@ export default function Allocations() {
                     </div>
                   </div>
                 ))
-            ) : (
-              <div className="card-minimal text-center py-12">
-                <p className="text-muted-foreground">Nenhum histórico de devolução</p>
-              </div>
-            )}
+              ) : (
+                <div className="card-minimal text-center py-12">
+                  <p className="text-muted-foreground">Nenhum histórico encontrado</p>
+                </div>
+              );
+            })()}
           </div>
         </TabsContent>
       </Tabs>
