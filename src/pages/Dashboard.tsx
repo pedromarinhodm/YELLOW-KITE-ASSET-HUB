@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { 
-  Monitor, 
   Users, 
-  AlertTriangle,
   DollarSign,
   TrendingUp,
   Package
@@ -128,71 +126,47 @@ export default function Dashboard() {
       </div>
 
       {/* Status Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="card-minimal">
-          <h2 className="text-base font-semibold text-foreground mb-6">Status dos Equipamentos</h2>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-                <span className="text-muted-foreground">Disponível</span>
-              </div>
-              <span className="font-medium text-foreground">{stats.available}</span>
+      <div className="card-minimal">
+        <h2 className="text-base font-semibold text-foreground mb-6">Status dos Equipamentos</h2>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+              <span className="text-muted-foreground">Disponível</span>
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                <span className="text-muted-foreground">Alocado</span>
-              </div>
-              <span className="font-medium text-foreground">{stats.allocated}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-                <span className="text-muted-foreground">Manutenção</span>
-              </div>
-              <span className="font-medium text-foreground">{stats.maintenance}</span>
-            </div>
+            <span className="font-medium text-foreground">{stats.available}</span>
           </div>
-
-          {/* Progress Bar */}
-          <div className="mt-6">
-            <div className="h-2 rounded-full bg-muted overflow-hidden flex">
-              <div 
-                className="bg-emerald-500 transition-all"
-                style={{ width: `${(stats.available / stats.totalEquipments) * 100}%` }}
-              />
-              <div 
-                className="bg-blue-500 transition-all"
-                style={{ width: `${(stats.allocated / stats.totalEquipments) * 100}%` }}
-              />
-              <div 
-                className="bg-amber-500 transition-all"
-                style={{ width: `${(stats.maintenance / stats.totalEquipments) * 100}%` }}
-              />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+              <span className="text-muted-foreground">Alocado</span>
             </div>
+            <span className="font-medium text-foreground">{stats.allocated}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+              <span className="text-muted-foreground">Manutenção</span>
+            </div>
+            <span className="font-medium text-foreground">{stats.maintenance}</span>
           </div>
         </div>
 
-        {/* Alerts */}
-        <div className="card-minimal">
-          <h2 className="text-base font-semibold text-foreground mb-6">Alertas</h2>
-          <div className="space-y-3">
-            {stats.maintenance > 0 ? (
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-amber-50 border border-amber-100">
-                <AlertTriangle className="w-5 h-5 text-amber-600" />
-                <span className="text-amber-800">
-                  {stats.maintenance} equipamento(s) em manutenção
-                </span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-100">
-                <Monitor className="w-5 h-5 text-emerald-600" />
-                <span className="text-emerald-800">
-                  Todos os equipamentos operacionais
-                </span>
-              </div>
-            )}
+        {/* Progress Bar */}
+        <div className="mt-6">
+          <div className="h-2 rounded-full bg-muted overflow-hidden flex">
+            <div 
+              className="bg-emerald-500 transition-all"
+              style={{ width: `${(stats.available / stats.totalEquipments) * 100}%` }}
+            />
+            <div 
+              className="bg-blue-500 transition-all"
+              style={{ width: `${(stats.allocated / stats.totalEquipments) * 100}%` }}
+            />
+            <div 
+              className="bg-amber-500 transition-all"
+              style={{ width: `${(stats.maintenance / stats.totalEquipments) * 100}%` }}
+            />
           </div>
         </div>
       </div>

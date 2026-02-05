@@ -3,6 +3,13 @@ import { Plus, Search, Edit2, Trash2, Mail, Building, Monitor } from 'lucide-rea
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -191,13 +198,25 @@ export default function Employees() {
 
                 <div className="space-y-2">
                   <Label htmlFor="department">Departamento</Label>
-                  <Input
-                    id="department"
+                  <Select
                     value={formData.department}
-                    onChange={e => setFormData({ ...formData, department: e.target.value })}
-                    placeholder="Ex: Design"
-                    required
-                  />
+                    onValueChange={value => setFormData({ ...formData, department: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Criação">Criação</SelectItem>
+                      <SelectItem value="Performance">Performance</SelectItem>
+                      <SelectItem value="Audio Visual">Audio Visual</SelectItem>
+                      <SelectItem value="Rocket">Rocket</SelectItem>
+                      <SelectItem value="Lead Zeppelin">Lead Zeppelin</SelectItem>
+                      <SelectItem value="Engenharia de Soluções">Engenharia de Soluções</SelectItem>
+                      <SelectItem value="Growth e Tecnologia">Growth e Tecnologia</SelectItem>
+                      <SelectItem value="Financeiro">Financeiro</SelectItem>
+                      <SelectItem value="RH">RH</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
