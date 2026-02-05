@@ -157,7 +157,7 @@ export default function Inventory() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
       </div>
     );
   }
@@ -166,8 +166,8 @@ export default function Inventory() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Inventário</h1>
-          <p className="text-muted-foreground">Gerencie todos os equipamentos da empresa</p>
+          <h1 className="text-2xl font-semibold text-foreground">Inventário</h1>
+          <p className="text-muted-foreground">Gerencie os equipamentos</p>
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -286,7 +286,7 @@ export default function Inventory() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -297,12 +297,12 @@ export default function Inventory() {
           />
         </div>
         <Select value={filterCategory} onValueChange={setFilterCategory}>
-          <SelectTrigger className="w-full sm:w-[180px]">
+          <SelectTrigger className="w-full sm:w-[160px]">
             <Filter className="w-4 h-4 mr-2" />
             <SelectValue placeholder="Categoria" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todas Categorias</SelectItem>
+            <SelectItem value="all">Todas</SelectItem>
             {categories.map(cat => (
               <SelectItem key={cat} value={cat}>
                 {CATEGORY_LABELS[cat]}
@@ -311,11 +311,11 @@ export default function Inventory() {
           </SelectContent>
         </Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-full sm:w-[180px]">
+          <SelectTrigger className="w-full sm:w-[160px]">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos Status</SelectItem>
+            <SelectItem value="all">Todos</SelectItem>
             {statuses.map(status => (
               <SelectItem key={status} value={status}>
                 {STATUS_LABELS[status]}
@@ -326,20 +326,20 @@ export default function Inventory() {
       </div>
 
       {/* Equipment List */}
-      <div className="grid gap-4">
+      <div className="grid gap-3">
         {filteredEquipments.length > 0 ? (
           filteredEquipments.map(equipment => (
             <div
               key={equipment.id}
-              className="card-dark flex flex-col sm:flex-row sm:items-center gap-4"
+              className="card-minimal flex flex-col sm:flex-row sm:items-center gap-4 hover:border-primary/30 transition-colors"
             >
               <div className="flex items-center gap-4 flex-1">
-                <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center">
-                  <CategoryIcon category={equipment.category} className="w-6 h-6 text-primary" />
+                <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center">
+                  <CategoryIcon category={equipment.category} className="w-5 h-5 text-muted-foreground" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-card-foreground truncate">{equipment.name}</h3>
-                  <p className="text-sm text-card-foreground/60">
+                  <h3 className="font-medium text-foreground truncate">{equipment.name}</h3>
+                  <p className="text-sm text-muted-foreground">
                     {CATEGORY_LABELS[equipment.category]} • {equipment.serialNumber}
                   </p>
                 </div>
@@ -347,22 +347,22 @@ export default function Inventory() {
 
               <div className="flex items-center gap-6">
                 <div className="text-right">
-                  <p className="font-semibold text-card-foreground">
+                  <p className="font-medium text-foreground">
                     R$ {equipment.purchaseValue.toLocaleString('pt-BR')}
                   </p>
-                  <p className="text-xs text-card-foreground/60">
+                  <p className="text-xs text-muted-foreground">
                     {new Date(equipment.purchaseDate).toLocaleDateString('pt-BR')}
                   </p>
                 </div>
 
                 <StatusBadge status={equipment.status} />
 
-                <div className="flex gap-2">
+                <div className="flex gap-1">
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => handleOpenDialog(equipment)}
-                    className="text-card-foreground/60 hover:text-card-foreground hover:bg-card-foreground/10"
+                    className="h-9 w-9 text-muted-foreground hover:text-foreground"
                   >
                     <Edit2 className="w-4 h-4" />
                   </Button>
@@ -370,7 +370,7 @@ export default function Inventory() {
                     variant="ghost"
                     size="icon"
                     onClick={() => setDeleteId(equipment.id)}
-                    className="text-destructive/60 hover:text-destructive hover:bg-destructive/10"
+                    className="h-9 w-9 text-muted-foreground hover:text-destructive"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -379,8 +379,8 @@ export default function Inventory() {
             </div>
           ))
         ) : (
-          <div className="card-dark text-center py-12">
-            <p className="text-card-foreground/60">Nenhum equipamento encontrado</p>
+          <div className="card-minimal text-center py-12">
+            <p className="text-muted-foreground">Nenhum equipamento encontrado</p>
           </div>
         )}
       </div>
