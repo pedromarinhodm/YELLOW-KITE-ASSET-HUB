@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Users, DollarSign, Package, AlertTriangle, UserPlus, UserMinus } from "lucide-react";
 import { equipmentService } from "@/services/equipmentService";
 import { employeeService } from "@/services/employeeService";
@@ -7,6 +6,7 @@ import { allocationService } from "@/services/allocationService";
 import { AllocationWithDetails, OverdueReturn } from "@/types";
 import { Button } from "@/components/ui/button";
 import { OffboardingModal } from "@/components/OffboardingModal";
+import { OnboardingModal } from "@/components/OnboardingModal";
 
 // Dados fictícios de pendências
 const mockOverdueReturns: OverdueReturn[] = [
@@ -49,7 +49,6 @@ interface Stats {
 }
 
 export default function Dashboard() {
-  const navigate = useNavigate();
   const [stats, setStats] = useState<Stats>({
     totalEquipments: 0,
     totalValue: 0,
@@ -61,6 +60,9 @@ export default function Dashboard() {
   const [recentAllocations, setRecentAllocations] = useState<AllocationWithDetails[]>([]);
   const [overdueReturns, setOverdueReturns] = useState<OverdueReturn[]>(mockOverdueReturns);
   const [loading, setLoading] = useState(true);
+
+  // Onboarding modal state
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
 
   // Offboarding modal state
   const [offboardingModal, setOffboardingModal] = useState<{
@@ -128,11 +130,11 @@ export default function Dashboard() {
 
         {/* Quick Actions */}
         <div className="flex gap-3">
-          <Button onClick={() => navigate("/allocations?action=onboarding")} className="gap-2">
+          <Button onClick={() => setOnboardingOpen(true)} className="gap-2">
             <UserPlus className="w-4 h-4" />
             Onboarding
           </Button>
-          <Button onClick={() => navigate("/allocations?action=offboarding")} variant="outline" className="gap-2">
+          <Button onClick={() => setOffboardingModal({ open: true, employeeId: "", employeeName: "" })} variant="outline" className="gap-2">
             <UserMinus className="w-4 h-4" />
             Offboarding
           </Button>
@@ -341,6 +343,13 @@ export default function Dashboard() {
           <p className="text-muted-foreground text-center py-8">Nenhuma alocação registrada</p>
         )}
       </div>
+
+      {/* Onboarding Modal */}
+      <OnboardingModal
+        open={onboardingOpen}
+        onOpenChange={setOnboardingOpen}
+        onSuccess={loadData}
+      />
 
       {/* Offboarding Modal */}
       <OffboardingModal
