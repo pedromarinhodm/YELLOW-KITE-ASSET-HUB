@@ -277,19 +277,25 @@ export default function Dashboard() {
 
           {/* Progress Bar */}
           <div className="mt-6">
-            <div className="h-2 rounded-full overflow-hidden flex">
-              <div 
-                className="bg-emerald-500 transition-all"
-                style={{ width: `${(stats.available / stats.totalEquipments) * 100}%` }}
-              />
-              <div 
-                className="bg-blue-500 transition-all"
-                style={{ width: `${(stats.allocated / stats.totalEquipments) * 100}%` }}
-              />
-              <div 
-                className="bg-amber-500 transition-all"
-                style={{ width: `${(stats.maintenance / stats.totalEquipments) * 100}%` }}
-              />
+            <div className="h-3 sm:h-2 rounded-full overflow-hidden flex bg-muted/30">
+              {stats.totalEquipments > 0 ? (
+                <>
+                  <div 
+                    className="bg-emerald-500 transition-all duration-300 min-w-[4px]"
+                    style={{ width: `${(stats.available / stats.totalEquipments) * 100}%` }}
+                  />
+                  <div 
+                    className="bg-blue-500 transition-all duration-300 min-w-[4px]"
+                    style={{ width: `${(stats.allocated / stats.totalEquipments) * 100}%` }}
+                  />
+                  <div 
+                    className="bg-amber-500 transition-all duration-300 min-w-[4px]"
+                    style={{ width: `${(stats.maintenance / stats.totalEquipments) * 100}%` }}
+                  />
+                </>
+              ) : (
+                <div className="w-full bg-muted/50" />
+              )}
             </div>
           </div>
         </div>
