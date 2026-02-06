@@ -3,6 +3,7 @@ import {
   Monitor, 
   Users, 
   ArrowRightLeft,
+  CalendarClock,
   Laptop
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
@@ -23,6 +24,7 @@ const navItems = [
   { title: 'Inventário', url: '/inventory', icon: Monitor },
   { title: 'Colaboradores', url: '/employees', icon: Users },
   { title: 'Alocações', url: '/allocations', icon: ArrowRightLeft },
+  { title: 'Reservas', url: '/reservations', icon: CalendarClock },
 ];
 
 export function AppSidebar() {

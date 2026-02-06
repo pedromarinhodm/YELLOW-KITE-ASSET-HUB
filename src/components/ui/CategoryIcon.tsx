@@ -5,6 +5,10 @@ import {
   Mouse, 
   Headphones, 
   Video,
+  Smartphone,
+  Camera,
+  Mic,
+  Lightbulb,
   Package
 } from 'lucide-react';
 import { EquipmentCategory } from '@/types';
@@ -21,6 +25,11 @@ const iconMap: Record<EquipmentCategory, React.ComponentType<{ className?: strin
   mouse: Mouse,
   headset: Headphones,
   webcam: Video,
+  smartphone: Smartphone,
+  tripod: Video, // Using Video as a stand-in for tripod
+  ringlight: Lightbulb,
+  camera: Camera,
+  microphone: Mic,
   other: Package,
 };
 
