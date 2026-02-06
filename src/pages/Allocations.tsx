@@ -56,7 +56,7 @@ export default function Allocations() {
   // Offboarding state
   const [isOffboardingOpen, setIsOffboardingOpen] = useState(false);
   const [activeAllocations, setActiveAllocations] = useState<AllocationWithDetails[]>([]);
-  const [selectedAllocation, setSelectedAllocation] = useState<string>('');
+  const [selectedAllocations, setSelectedAllocations] = useState<string[]>([]);
   const [offboardingNotes, setOffboardingNotes] = useState('');
 
   // Term preview
@@ -132,7 +132,7 @@ export default function Allocations() {
 
   const handleOpenOffboarding = async () => {
     setSelectedEmployee('');
-    setSelectedAllocation('');
+    setSelectedAllocations([]);
     setActiveAllocations([]);
     setOffboardingNotes('');
     setIsOffboardingOpen(true);
@@ -140,18 +140,28 @@ export default function Allocations() {
 
   const handleEmployeeSelectOffboarding = async (employeeId: string) => {
     setSelectedEmployee(employeeId);
-    setSelectedAllocation('');
+    setSelectedAllocations([]);
     await loadActiveAllocations(employeeId);
   };
 
+  const handleToggleAllocation = (allocationId: string) => {
+    setSelectedAllocations(prev =>
+      prev.includes(allocationId)
+        ? prev.filter(id => id !== allocationId)
+        : [...prev, allocationId]
+    );
+  };
+
   const handleOffboarding = async () => {
-    if (!selectedAllocation) {
-      toast.error('Selecione uma alocação para devolver');
+    if (selectedAllocations.length === 0) {
+      toast.error('Selecione pelo menos um equipamento para devolver');
       return;
     }
 
-    await allocationService.deallocate(selectedAllocation, offboardingNotes);
-    toast.success('Offboarding realizado com sucesso!');
+    for (const allocationId of selectedAllocations) {
+      await allocationService.deallocate(allocationId, offboardingNotes);
+    }
+    toast.success(`${selectedAllocations.length} equipamento(s) devolvido(s) com sucesso!`);
     setIsOffboardingOpen(false);
     await loadData();
   };
@@ -454,22 +464,30 @@ export default function Allocations() {
 
             {selectedEmployee && (
               <div className="space-y-2">
-                <Label>Equipamento</Label>
-                <Select value={selectedAllocation} onValueChange={setSelectedAllocation}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o equipamento" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {activeAllocations.map(alloc => (
-                      <SelectItem key={alloc.id} value={alloc.id}>
-                        {alloc.equipment.name} ({alloc.equipment.serialNumber})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {activeAllocations.length === 0 && (
-                  <p className="text-sm text-muted-foreground">Nenhum equipamento alocado</p>
-                )}
+                <Label>Equipamentos Alocados</Label>
+                <div className="max-h-[200px] overflow-y-auto border rounded-xl p-2 space-y-2">
+                  {activeAllocations.length > 0 ? (
+                    activeAllocations.map(alloc => (
+                      <div
+                        key={alloc.id}
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
+                        onClick={() => handleToggleAllocation(alloc.id)}
+                      >
+                        <Checkbox checked={selectedAllocations.includes(alloc.id)} />
+                        <CategoryIcon category={alloc.equipment.category} className="w-5 h-5 text-muted-foreground" />
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{alloc.equipment.name}</p>
+                          <p className="text-xs text-muted-foreground">{alloc.equipment.serialNumber}</p>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(alloc.allocatedAt).toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-center py-4 text-muted-foreground">Nenhum equipamento alocado</p>
+                  )}
+                </div>
               </div>
             )}
 
@@ -478,7 +496,7 @@ export default function Allocations() {
               <Textarea
                 value={offboardingNotes}
                 onChange={e => setOffboardingNotes(e.target.value)}
-                placeholder="Ex: Equipamento em bom estado"
+                placeholder="Ex: Equipamentos em bom estado"
               />
             </div>
 
@@ -486,8 +504,8 @@ export default function Allocations() {
               <Button variant="outline" onClick={() => setIsOffboardingOpen(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleOffboarding} disabled={!selectedAllocation}>
-                Confirmar Devolução
+              <Button onClick={handleOffboarding} disabled={selectedAllocations.length === 0}>
+                Confirmar Devolução ({selectedAllocations.length})
               </Button>
             </div>
           </div>
