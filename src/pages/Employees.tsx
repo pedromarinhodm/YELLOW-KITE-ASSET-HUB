@@ -225,8 +225,8 @@ export default function Employees() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1 max-w-md">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Buscar por nome, email ou cargo..."
@@ -236,7 +236,7 @@ export default function Employees() {
           />
         </div>
         <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-          <SelectTrigger className="w-full sm:w-[200px]">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Departamento" />
           </SelectTrigger>
           <SelectContent>
@@ -274,11 +274,11 @@ export default function Employees() {
 
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1.5">
-                  <Mail className="w-4 h-4" />
-                  <span className="truncate max-w-[180px]">{employee.email}</span>
+                  <Mail className="w-4 h-4 shrink-0" />
+                  <span>{employee.email}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <Building className="w-4 h-4" />
+                  <Building className="w-4 h-4 shrink-0" />
                   <span>{employee.department}</span>
                 </div>
               </div>

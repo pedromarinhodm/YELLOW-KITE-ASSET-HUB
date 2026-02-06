@@ -31,7 +31,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-const allCategories: EquipmentCategory[] = [...STATION_CATEGORIES, ...FIELD_CATEGORIES, "other"];
+const allCategories: EquipmentCategory[] = [...STATION_CATEGORIES, ...FIELD_CATEGORIES];
 const statuses: EquipmentStatus[] = ["available", "allocated", "maintenance", "reserved"];
 const classifications: EquipmentClassification[] = ["station", "field"];
 
@@ -239,7 +239,7 @@ export default function Inventory() {
                         {CATEGORY_LABELS[cat]}
                       </SelectItem>
                     ))}
-                    <SelectItem value="other">Outro</SelectItem>
+                    
                   </SelectContent>
                 </Select>
               </div>
