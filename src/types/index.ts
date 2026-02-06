@@ -2,7 +2,7 @@
 
 export type EquipmentStatus = 'available' | 'allocated' | 'maintenance' | 'reserved';
 
-// Classificação: Estação (fixos) vs Campo (rotativos)
+// Classificação: Setup de Mesa (fixos) vs Externas (rotativos)
 export type EquipmentClassification = 'station' | 'field';
 
 export type EquipmentCategory = 
@@ -19,12 +19,12 @@ export type EquipmentCategory =
   | 'microphone'
   | 'other';
 
-// Categorias de estação (fixos/híbridos)
+// Categorias de Setup de Mesa (fixos/híbridos)
 export const STATION_CATEGORIES: EquipmentCategory[] = [
   'notebook', 'monitor', 'keyboard', 'mouse', 'headset', 'webcam'
 ];
 
-// Categorias de campo (rotativos/externos)
+// Categorias de Externas (rotativos/externos)
 export const FIELD_CATEGORIES: EquipmentCategory[] = [
   'smartphone', 'tripod', 'ringlight', 'camera', 'microphone'
 ];
@@ -66,6 +66,17 @@ export interface Allocation {
 export interface AllocationWithDetails extends Allocation {
   employee: Employee;
   equipment: Equipment;
+}
+
+// Pendência de devolução
+export interface OverdueReturn {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  equipmentName: string;
+  dueDate: string;
+  daysOverdue: number;
+  resolved: boolean;
 }
 
 export const CATEGORY_LABELS: Record<EquipmentCategory, string> = {

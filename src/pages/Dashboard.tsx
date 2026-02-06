@@ -1,14 +1,50 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Users, 
   DollarSign,
-  TrendingUp,
-  Package
+  Package,
+  AlertTriangle,
+  UserPlus,
+  UserMinus,
+  Check
 } from 'lucide-react';
 import { equipmentService } from '@/services/equipmentService';
 import { employeeService } from '@/services/employeeService';
 import { allocationService } from '@/services/allocationService';
-import { AllocationWithDetails } from '@/types';
+import { AllocationWithDetails, OverdueReturn } from '@/types';
+import { Button } from '@/components/ui/button';
+
+// Dados fictícios de pendências
+const mockOverdueReturns: OverdueReturn[] = [
+  {
+    id: '1',
+    employeeId: '4',
+    employeeName: 'Rafael Oliveira',
+    equipmentName: 'MacBook Pro 14"',
+    dueDate: '2026-01-20',
+    daysOverdue: 17,
+    resolved: false,
+  },
+  {
+    id: '2',
+    employeeId: '2',
+    employeeName: 'Carlos Mendes',
+    equipmentName: 'Monitor LG UltraWide',
+    dueDate: '2026-01-28',
+    daysOverdue: 9,
+    resolved: false,
+  },
+  {
+    id: '3',
+    employeeId: '3',
+    employeeName: 'Beatriz Costa',
+    equipmentName: 'iPhone 15 Pro',
+    dueDate: '2026-02-01',
+    daysOverdue: 5,
+    resolved: false,
+  },
+];
 
 interface Stats {
   totalEquipments: number;
@@ -20,6 +56,7 @@ interface Stats {
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<Stats>({
     totalEquipments: 0,
     totalValue: 0,
@@ -29,6 +66,7 @@ export default function Dashboard() {
     totalEmployees: 0,
   });
   const [recentAllocations, setRecentAllocations] = useState<AllocationWithDetails[]>([]);
+  const [overdueReturns, setOverdueReturns] = useState<OverdueReturn[]>(mockOverdueReturns);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -53,9 +91,15 @@ export default function Dashboard() {
     loadData();
   }, []);
 
-  const allocatedPercentage = stats.totalEquipments > 0 
-    ? Math.round((stats.allocated / stats.totalEquipments) * 100) 
-    : 0;
+  const handleResolveOverdue = (id: string) => {
+    setOverdueReturns(prev => 
+      prev.map(item => 
+        item.id === id ? { ...item, resolved: true } : item
+      )
+    );
+  };
+
+  const pendingOverdueCount = overdueReturns.filter(item => !item.resolved).length;
 
   if (loading) {
     return (
@@ -73,11 +117,11 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="stat-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Total de Ativos</p>
+              <p className="text-sm text-muted-foreground">Total de Equipamentos</p>
               <p className="text-3xl font-semibold text-foreground mt-1">{stats.totalEquipments}</p>
             </div>
             <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -111,19 +155,99 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="stat-card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Taxa de Alocação</p>
-              <p className="text-3xl font-semibold text-foreground mt-1">{allocatedPercentage}%</p>
-            </div>
-            <div className="w-12 h-12 rounded-xl bg-violet-50 flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-violet-600" />
-            </div>
-          </div>
+      {/* Quick Actions */}
+      <div className="card-minimal">
+        <h2 className="text-base font-semibold text-foreground mb-4">Ações Rápidas</h2>
+        <div className="flex flex-wrap gap-3">
+          <Button 
+            onClick={() => navigate('/allocations?action=onboarding')}
+            className="gap-2"
+          >
+            <UserPlus className="w-4 h-4" />
+            Iniciar Onboarding
+          </Button>
+          <Button 
+            onClick={() => navigate('/allocations?action=offboarding')}
+            variant="outline"
+            className="gap-2"
+          >
+            <UserMinus className="w-4 h-4" />
+            Iniciar Offboarding
+          </Button>
         </div>
       </div>
+
+      {/* Overdue Returns Alert */}
+      {pendingOverdueCount > 0 && (
+        <div className="card-minimal border-amber-200 bg-amber-50/50">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-foreground">
+                Pendências de Devolução
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {pendingOverdueCount} {pendingOverdueCount === 1 ? 'pessoa' : 'pessoas'} com equipamentos fora do prazo
+              </p>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            {overdueReturns.map((item) => (
+              <div 
+                key={item.id}
+                className={`flex items-center justify-between p-3 rounded-lg transition-all ${
+                  item.resolved 
+                    ? 'bg-emerald-50 border border-emerald-200' 
+                    : 'bg-white border border-amber-200'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    item.resolved ? 'bg-emerald-100' : 'bg-amber-100'
+                  }`}>
+                    <span className={`text-sm font-medium ${
+                      item.resolved ? 'text-emerald-700' : 'text-amber-700'
+                    }`}>
+                      {item.employeeName.charAt(0)}
+                    </span>
+                  </div>
+                  <div>
+                    <p className={`text-sm font-medium ${
+                      item.resolved ? 'text-emerald-700 line-through' : 'text-foreground'
+                    }`}>
+                      {item.employeeName}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {item.equipmentName} • {item.daysOverdue} dias em atraso
+                    </p>
+                  </div>
+                </div>
+                
+                {!item.resolved ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleResolveOverdue(item.id)}
+                    className="gap-1.5 text-xs border-amber-300 hover:bg-amber-100"
+                  >
+                    <Check className="w-3 h-3" />
+                    Resolver
+                  </Button>
+                ) : (
+                  <span className="text-xs text-emerald-600 font-medium px-2 py-1 bg-emerald-100 rounded-full">
+                    Resolvido
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Status Overview */}
       <div className="card-minimal">
@@ -201,7 +325,7 @@ export default function Dashboard() {
                       ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
                       : 'bg-blue-50 text-blue-700 border border-blue-200'
                   }`}>
-                    {allocation.returnedAt ? 'Devolvido' : 'Ativo'}
+                    {allocation.returnedAt ? 'Devolvido' : 'Alocado'}
                   </span>
                 </div>
               </div>
