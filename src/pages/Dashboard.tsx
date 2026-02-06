@@ -213,15 +213,15 @@ export default function Dashboard() {
               {stats.totalEquipments > 0 ? (
                 <>
                   <div
-                    className="bg-emerald-500 transition-all duration-300 min-w-[4px]"
+                    className="bg-emerald-500 transition-all duration-300"
                     style={{ width: `${(stats.available / stats.totalEquipments) * 100}%` }}
                   />
                   <div
-                    className="bg-blue-500 transition-all duration-300 min-w-[4px]"
+                    className="bg-blue-500 transition-all duration-300"
                     style={{ width: `${(stats.allocated / stats.totalEquipments) * 100}%` }}
                   />
                   <div
-                    className="bg-amber-500 transition-all duration-300 min-w-[4px]"
+                    className="bg-amber-500 transition-all duration-300"
                     style={{ width: `${(stats.maintenance / stats.totalEquipments) * 100}%` }}
                   />
                 </>
@@ -229,8 +229,7 @@ export default function Dashboard() {
                 <div className="w-full bg-muted/50" />
               )}
             </div>
-          </div>
-        </div>
+          </div>          
 
         {/* Overdue Returns Alert (Agora à direita no desktop) */}
         <div className="card-minimal border-amber-200 bg-amber-50/50">
