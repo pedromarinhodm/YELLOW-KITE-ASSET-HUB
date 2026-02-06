@@ -76,22 +76,22 @@ export default function Dashboard() {
     setRecentAllocations(allocations.slice(-5).reverse());
 
     // Gerar pendências a partir das alocações ativas (não devolvidas)
-    const activeAllocations = allocations.filter(a => !a.returnedAt);
+    const activeAllocations = allocations.filter((a) => !a.returnedAt);
     const today = new Date();
-    
+
     const pendencias: OverdueReturn[] = activeAllocations.map((allocation) => {
       // Para fins de demonstração, simular uma data de vencimento recente
       // Usando a data atual menos um período aleatório para criar atrasos realistas
       const randomDaysOverdue = Math.floor(Math.random() * 15) + 3; // 3 a 17 dias de atraso
       const dueDate = new Date(today);
       dueDate.setDate(dueDate.getDate() - randomDaysOverdue);
-      
+
       return {
         id: `overdue-${allocation.id}`,
         employeeId: allocation.employee.id,
         employeeName: allocation.employee.name,
         equipmentName: allocation.equipment.name,
-        dueDate: dueDate.toISOString().split('T')[0],
+        dueDate: dueDate.toISOString().split("T")[0],
         daysOverdue: randomDaysOverdue,
         resolved: false,
       };
@@ -116,7 +116,7 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground">Visão geral do inventário</p>
+          <p className="text-muted-foreground">Visão geral </p>
         </div>
 
         {/* Quick Actions */}
@@ -212,22 +212,13 @@ export default function Dashboard() {
               {stats.totalEquipments > 0 ? (
                 <>
                   {stats.available > 0 && (
-                    <div
-                      className="bg-emerald-500 transition-all duration-300"
-                      style={{ flex: stats.available }}
-                    />
+                    <div className="bg-emerald-500 transition-all duration-300" style={{ flex: stats.available }} />
                   )}
                   {stats.allocated > 0 && (
-                    <div
-                      className="bg-blue-500 transition-all duration-300"
-                      style={{ flex: stats.allocated }}
-                    />
+                    <div className="bg-blue-500 transition-all duration-300" style={{ flex: stats.allocated }} />
                   )}
                   {stats.maintenance > 0 && (
-                    <div
-                      className="bg-amber-500 transition-all duration-300"
-                      style={{ flex: stats.maintenance }}
-                    />
+                    <div className="bg-amber-500 transition-all duration-300" style={{ flex: stats.maintenance }} />
                   )}
                 </>
               ) : (
