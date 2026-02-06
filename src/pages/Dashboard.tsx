@@ -274,6 +274,24 @@ export default function Dashboard() {
               <span className="font-medium text-foreground">{stats.maintenance}</span>
             </div>
           </div>
+
+          {/* Progress Bar */}
+          <div className="mt-6">
+            <div className="h-2 rounded-full overflow-hidden flex">
+              <div 
+                className="bg-emerald-500 transition-all"
+                style={{ width: `${(stats.available / stats.totalEquipments) * 100}%` }}
+              />
+              <div 
+                className="bg-blue-500 transition-all"
+                style={{ width: `${(stats.allocated / stats.totalEquipments) * 100}%` }}
+              />
+              <div 
+                className="bg-amber-500 transition-all"
+                style={{ width: `${(stats.maintenance / stats.totalEquipments) * 100}%` }}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
