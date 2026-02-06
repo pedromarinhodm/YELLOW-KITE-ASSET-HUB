@@ -1,21 +1,9 @@
-import { useEffect, useState } from 'react';
-import { Plus, Search, Edit2, Trash2, Mail, Building, Monitor } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { useEffect, useState } from "react";
+import { Plus, Search, Edit2, Trash2, Mail, Building, Monitor } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,20 +13,20 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Label } from '@/components/ui/label';
-import { employeeService } from '@/services/employeeService';
-import { allocationService } from '@/services/allocationService';
-import { Employee, AllocationWithDetails, FIELD_CATEGORIES } from '@/types';
-import { toast } from 'sonner';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Building2, Tent } from 'lucide-react';
+} from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
+import { employeeService } from "@/services/employeeService";
+import { allocationService } from "@/services/allocationService";
+import { Employee, AllocationWithDetails, FIELD_CATEGORIES } from "@/types";
+import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Building2, Tent } from "lucide-react";
 
 export default function Employees() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [departmentFilter, setDepartmentFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState<string>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
@@ -47,10 +35,10 @@ export default function Employees() {
   const [loading, setLoading] = useState(true);
 
   const [formData, setFormData] = useState({
-    name: '',
-    role: '',
-    email: '',
-    department: '',
+    name: "",
+    role: "",
+    email: "",
+    department: "",
   });
 
   useEffect(() => {
@@ -73,22 +61,22 @@ export default function Employees() {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
-        e =>
+        (e) =>
           e.name.toLowerCase().includes(term) ||
           e.email.toLowerCase().includes(term) ||
-          e.role.toLowerCase().includes(term)
+          e.role.toLowerCase().includes(term),
       );
     }
 
-    if (departmentFilter !== 'all') {
-      filtered = filtered.filter(e => e.department === departmentFilter);
+    if (departmentFilter !== "all") {
+      filtered = filtered.filter((e) => e.department === departmentFilter);
     }
 
     setFilteredEmployees(filtered);
   };
 
   const resetForm = () => {
-    setFormData({ name: '', role: '', email: '', department: '' });
+    setFormData({ name: "", role: "", email: "", department: "" });
     setEditingEmployee(null);
   };
 
@@ -112,10 +100,10 @@ export default function Employees() {
 
     if (editingEmployee) {
       await employeeService.update(editingEmployee.id, formData);
-      toast.success('Colaborador atualizado com sucesso!');
+      toast.success("Colaborador atualizado com sucesso!");
     } else {
       await employeeService.create(formData);
-      toast.success('Colaborador cadastrado com sucesso!');
+      toast.success("Colaborador cadastrado com sucesso!");
     }
 
     await loadEmployees();
@@ -126,7 +114,7 @@ export default function Employees() {
   const handleDelete = async () => {
     if (deleteId) {
       await employeeService.delete(deleteId);
-      toast.success('Colaborador removido com sucesso!');
+      toast.success("Colaborador removido com sucesso!");
       await loadEmployees();
       setDeleteId(null);
     }
@@ -151,7 +139,7 @@ export default function Employees() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Colaboradores</h1>
-          <p className="text-muted-foreground">Gerencie os colaboradores</p>
+          <p className="text-muted-foreground">Gerenciamento dos colaboradores</p>
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -163,9 +151,7 @@ export default function Employees() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>
-                {editingEmployee ? 'Editar Colaborador' : 'Cadastrar Novo Colaborador'}
-              </DialogTitle>
+              <DialogTitle>{editingEmployee ? "Editar Colaborador" : "Cadastrar Novo Colaborador"}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 mt-4">
               <div className="space-y-2">
@@ -173,7 +159,7 @@ export default function Employees() {
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={e => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Ex: João Silva"
                   required
                 />
@@ -185,7 +171,7 @@ export default function Employees() {
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={e => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="Ex: joao.silva@yellowkite.com"
                   required
                 />
@@ -197,7 +183,7 @@ export default function Employees() {
                   <Input
                     id="role"
                     value={formData.role}
-                    onChange={e => setFormData({ ...formData, role: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                     placeholder="Ex: Designer UX"
                     required
                   />
@@ -207,7 +193,7 @@ export default function Employees() {
                   <Label htmlFor="department">Departamento</Label>
                   <Select
                     value={formData.department}
-                    onValueChange={value => setFormData({ ...formData, department: value })}
+                    onValueChange={(value) => setFormData({ ...formData, department: value })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione..." />
@@ -231,9 +217,7 @@ export default function Employees() {
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit">
-                  {editingEmployee ? 'Salvar Alterações' : 'Cadastrar'}
-                </Button>
+                <Button type="submit">{editingEmployee ? "Salvar Alterações" : "Cadastrar"}</Button>
               </div>
             </form>
           </DialogContent>
@@ -247,7 +231,7 @@ export default function Employees() {
           <Input
             placeholder="Buscar por nome, email ou cargo..."
             value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
           />
         </div>
@@ -273,16 +257,14 @@ export default function Employees() {
       {/* Employee List */}
       <div className="grid gap-3">
         {filteredEmployees.length > 0 ? (
-          filteredEmployees.map(employee => (
+          filteredEmployees.map((employee) => (
             <div
               key={employee.id}
               className="card-minimal flex flex-col sm:flex-row sm:items-center gap-4 hover:border-primary/30 transition-colors"
             >
               <div className="flex items-center gap-4 flex-1">
                 <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center">
-                  <span className="text-sm font-semibold text-primary-foreground">
-                    {employee.name.charAt(0)}
-                  </span>
+                  <span className="text-sm font-semibold text-primary-foreground">{employee.name.charAt(0)}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-medium text-foreground truncate">{employee.name}</h3>
@@ -344,7 +326,7 @@ export default function Employees() {
           </DialogHeader>
           <div className="mt-4">
             {employeeAllocations.length > 0 ? (
-              selectedEmployee?.department === 'Audio Visual' ? (
+              selectedEmployee?.department === "Audio Visual" ? (
                 <Tabs defaultValue="setup" className="w-full">
                   <TabsList className="grid w-full grid-cols-2 mb-4">
                     <TabsTrigger value="setup" className="gap-2">
@@ -357,22 +339,20 @@ export default function Employees() {
                     </TabsTrigger>
                   </TabsList>
                   <TabsContent value="setup" className="space-y-3">
-                    {employeeAllocations.filter(a => a.equipment.classification === 'station').length > 0 ? (
+                    {employeeAllocations.filter((a) => a.equipment.classification === "station").length > 0 ? (
                       employeeAllocations
-                        .filter(a => a.equipment.classification === 'station')
-                        .map(allocation => (
+                        .filter((a) => a.equipment.classification === "station")
+                        .map((allocation) => (
                           <div
                             key={allocation.id}
                             className="flex items-center justify-between p-4 rounded-xl bg-muted"
                           >
                             <div>
                               <p className="font-medium">{allocation.equipment.name}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {allocation.equipment.serialNumber}
-                              </p>
+                              <p className="text-sm text-muted-foreground">{allocation.equipment.serialNumber}</p>
                             </div>
                             <span className="text-xs text-muted-foreground">
-                              Desde {new Date(allocation.allocatedAt).toLocaleDateString('pt-BR')}
+                              Desde {new Date(allocation.allocatedAt).toLocaleDateString("pt-BR")}
                             </span>
                           </div>
                         ))
@@ -383,56 +363,45 @@ export default function Employees() {
                     )}
                   </TabsContent>
                   <TabsContent value="externas" className="space-y-3">
-                    {employeeAllocations.filter(a => a.equipment.classification === 'field').length > 0 ? (
+                    {employeeAllocations.filter((a) => a.equipment.classification === "field").length > 0 ? (
                       employeeAllocations
-                        .filter(a => a.equipment.classification === 'field')
-                        .map(allocation => (
+                        .filter((a) => a.equipment.classification === "field")
+                        .map((allocation) => (
                           <div
                             key={allocation.id}
                             className="flex items-center justify-between p-4 rounded-xl bg-amber-500/10 border border-amber-500/20"
                           >
                             <div>
                               <p className="font-medium">{allocation.equipment.name}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {allocation.equipment.serialNumber}
-                              </p>
+                              <p className="text-sm text-muted-foreground">{allocation.equipment.serialNumber}</p>
                             </div>
                             <span className="text-xs text-muted-foreground">
-                              Desde {new Date(allocation.allocatedAt).toLocaleDateString('pt-BR')}
+                              Desde {new Date(allocation.allocatedAt).toLocaleDateString("pt-BR")}
                             </span>
                           </div>
                         ))
                     ) : (
-                      <p className="text-center text-muted-foreground py-8">
-                        Nenhum equipamento de externas alocado
-                      </p>
+                      <p className="text-center text-muted-foreground py-8">Nenhum equipamento de externas alocado</p>
                     )}
                   </TabsContent>
                 </Tabs>
               ) : (
                 <div className="space-y-3">
-                  {employeeAllocations.map(allocation => (
-                    <div
-                      key={allocation.id}
-                      className="flex items-center justify-between p-4 rounded-xl bg-muted"
-                    >
+                  {employeeAllocations.map((allocation) => (
+                    <div key={allocation.id} className="flex items-center justify-between p-4 rounded-xl bg-muted">
                       <div>
                         <p className="font-medium">{allocation.equipment.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {allocation.equipment.serialNumber}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{allocation.equipment.serialNumber}</p>
                       </div>
                       <span className="text-xs text-muted-foreground">
-                        Desde {new Date(allocation.allocatedAt).toLocaleDateString('pt-BR')}
+                        Desde {new Date(allocation.allocatedAt).toLocaleDateString("pt-BR")}
                       </span>
                     </div>
                   ))}
                 </div>
               )
             ) : (
-              <p className="text-center text-muted-foreground py-8">
-                Nenhum equipamento alocado
-              </p>
+              <p className="text-center text-muted-foreground py-8">Nenhum equipamento alocado</p>
             )}
           </div>
         </DialogContent>
@@ -449,7 +418,10 @@ export default function Employees() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
