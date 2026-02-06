@@ -1,46 +1,39 @@
-import { useEffect, useState } from 'react';
-import { 
-  Users, 
-  DollarSign,
-  Package,
-  AlertTriangle,
-  UserPlus,
-  UserMinus
-} from 'lucide-react';
-import { equipmentService } from '@/services/equipmentService';
-import { employeeService } from '@/services/employeeService';
-import { allocationService } from '@/services/allocationService';
-import { AllocationWithDetails, OverdueReturn } from '@/types';
-import { Button } from '@/components/ui/button';
-import { OffboardingModal } from '@/components/OffboardingModal';
-import { OnboardingModal } from '@/components/OnboardingModal';
+import { useEffect, useState } from "react";
+import { Users, DollarSign, Package, AlertTriangle, UserPlus, UserMinus } from "lucide-react";
+import { equipmentService } from "@/services/equipmentService";
+import { employeeService } from "@/services/employeeService";
+import { allocationService } from "@/services/allocationService";
+import { AllocationWithDetails, OverdueReturn } from "@/types";
+import { Button } from "@/components/ui/button";
+import { OffboardingModal } from "@/components/OffboardingModal";
+import { OnboardingModal } from "@/components/OnboardingModal";
 
 // Dados fictícios de pendências
 const mockOverdueReturns: OverdueReturn[] = [
   {
-    id: '1',
-    employeeId: '4',
-    employeeName: 'Rafael Oliveira',
+    id: "1",
+    employeeId: "4",
+    employeeName: "Rafael Oliveira",
     equipmentName: 'MacBook Pro 14"',
-    dueDate: '2026-01-20',
+    dueDate: "2026-01-20",
     daysOverdue: 17,
     resolved: false,
   },
   {
-    id: '2',
-    employeeId: '2',
-    employeeName: 'Carlos Mendes',
-    equipmentName: 'Monitor LG UltraWide',
-    dueDate: '2026-01-28',
+    id: "2",
+    employeeId: "2",
+    employeeName: "Carlos Mendes",
+    equipmentName: "Monitor LG UltraWide",
+    dueDate: "2026-01-28",
     daysOverdue: 9,
     resolved: false,
   },
   {
-    id: '3',
-    employeeId: '3',
-    employeeName: 'Beatriz Costa',
-    equipmentName: 'iPhone 15 Pro',
-    dueDate: '2026-02-01',
+    id: "3",
+    employeeId: "3",
+    employeeName: "Beatriz Costa",
+    equipmentName: "iPhone 15 Pro",
+    dueDate: "2026-02-01",
     daysOverdue: 5,
     resolved: false,
   },
@@ -67,14 +60,14 @@ export default function Dashboard() {
   const [recentAllocations, setRecentAllocations] = useState<AllocationWithDetails[]>([]);
   const [overdueReturns, setOverdueReturns] = useState<OverdueReturn[]>(mockOverdueReturns);
   const [loading, setLoading] = useState(true);
-  
+
   // Modal states
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [offboardingModal, setOffboardingModal] = useState<{
     open: boolean;
     employeeId: string;
     employeeName: string;
-  }>({ open: false, employeeId: '', employeeName: '' });
+  }>({ open: false, employeeId: "", employeeName: "" });
 
   useEffect(() => {
     loadData();
@@ -90,12 +83,8 @@ export default function Dashboard() {
 
   const handleOffboardingSuccess = () => {
     // Mark the item as resolved after successful offboarding
-    setOverdueReturns(prev => 
-      prev.map(item => 
-        item.employeeId === offboardingModal.employeeId 
-          ? { ...item, resolved: true } 
-          : item
-      )
+    setOverdueReturns((prev) =>
+      prev.map((item) => (item.employeeId === offboardingModal.employeeId ? { ...item, resolved: true } : item)),
     );
     // Reload data to refresh allocations
     loadData();
@@ -119,7 +108,7 @@ export default function Dashboard() {
     setLoading(false);
   };
 
-  const pendingOverdueCount = overdueReturns.filter(item => !item.resolved).length;
+  const pendingOverdueCount = overdueReturns.filter((item) => !item.resolved).length;
 
   if (loading) {
     return (
@@ -136,18 +125,15 @@ export default function Dashboard() {
           <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground">Visão geral do inventário</p>
         </div>
-        
+
         {/* Quick Actions */}
         <div className="flex gap-3">
-          <Button 
-            onClick={() => setIsOnboardingOpen(true)}
-            className="gap-2"
-          >
+          <Button onClick={() => setIsOnboardingOpen(true)} className="gap-2">
             <UserPlus className="w-4 h-4" />
             Onboarding
           </Button>
-          <Button 
-            onClick={() => setOffboardingModal({ open: true, employeeId: '', employeeName: '' })}
+          <Button
+            onClick={() => setOffboardingModal({ open: true, employeeId: "", employeeName: "" })}
             variant="outline"
             className="gap-2"
           >
@@ -176,7 +162,7 @@ export default function Dashboard() {
             <div>
               <p className="text-sm text-muted-foreground">Valor Total</p>
               <p className="text-3xl font-semibold text-foreground mt-1">
-                R$ {stats.totalValue.toLocaleString('pt-BR')}
+                R$ {stats.totalValue.toLocaleString("pt-BR")}
               </p>
             </div>
             <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center">
@@ -200,75 +186,6 @@ export default function Dashboard() {
 
       {/* Overdue Returns and Status Overview - Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Overdue Returns Alert */}
-        <div className="card-minimal border-amber-200 bg-amber-50/50">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5 text-amber-600" />
-            </div>
-            <div>
-              <h2 className="text-base font-semibold text-foreground">
-                Pendências de Devolução
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                {pendingOverdueCount} {pendingOverdueCount === 1 ? 'pessoa' : 'pessoas'} com equipamentos fora do prazo
-              </p>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            {overdueReturns.map((item) => (
-              <div 
-                key={item.id}
-                className={`flex items-center justify-between p-3 rounded-lg transition-all ${
-                  item.resolved 
-                    ? 'bg-emerald-50 border border-emerald-200' 
-                    : 'bg-white border border-amber-200'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    item.resolved ? 'bg-emerald-100' : 'bg-amber-100'
-                  }`}>
-                    <span className={`text-sm font-medium ${
-                      item.resolved ? 'text-emerald-700' : 'text-amber-700'
-                    }`}>
-                      {item.employeeName.charAt(0)}
-                    </span>
-                  </div>
-                  <div>
-                    <p className={`text-sm font-medium ${
-                      item.resolved ? 'text-emerald-700 line-through' : 'text-foreground'
-                    }`}>
-                      {item.employeeName}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {item.equipmentName} • {item.daysOverdue} dias em atraso
-                    </p>
-                  </div>
-                </div>
-                
-                {!item.resolved ? (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleOpenOffboardingModal(item)}
-                    className="gap-1.5 text-xs border-amber-300 hover:bg-amber-100"
-                  >
-                    <UserMinus className="w-3 h-3" />
-                    Resolver
-                  </Button>
-                ) : (
-                  <span className="text-xs text-emerald-600 font-medium px-2 py-1 bg-emerald-100 rounded-full">
-                    Resolvido
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Status Overview */}
         <div className="card-minimal">
           <h2 className="text-base font-semibold text-foreground mb-6">Status dos Equipamentos</h2>
           <div className="space-y-4">
@@ -300,15 +217,15 @@ export default function Dashboard() {
             <div className="h-3 sm:h-2 rounded-full overflow-hidden flex bg-muted/30">
               {stats.totalEquipments > 0 ? (
                 <>
-                  <div 
+                  <div
                     className="bg-emerald-500 transition-all duration-300 min-w-[4px]"
                     style={{ width: `${(stats.available / stats.totalEquipments) * 100}%` }}
                   />
-                  <div 
+                  <div
                     className="bg-blue-500 transition-all duration-300 min-w-[4px]"
                     style={{ width: `${(stats.allocated / stats.totalEquipments) * 100}%` }}
                   />
-                  <div 
+                  <div
                     className="bg-amber-500 transition-all duration-300 min-w-[4px]"
                     style={{ width: `${(stats.maintenance / stats.totalEquipments) * 100}%` }}
                   />
@@ -321,21 +238,87 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Overdue Returns Alert */}
+      <div className="card-minimal border-amber-200 bg-amber-50/50">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+            <AlertTriangle className="w-5 h-5 text-amber-600" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-foreground">Pendências de Devolução</h2>
+            <p className="text-sm text-muted-foreground">
+              {pendingOverdueCount} {pendingOverdueCount === 1 ? "pessoa" : "pessoas"} com equipamentos fora do prazo
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          {overdueReturns.map((item) => (
+            <div
+              key={item.id}
+              className={`flex items-center justify-between p-3 rounded-lg transition-all ${
+                item.resolved ? "bg-emerald-50 border border-emerald-200" : "bg-white border border-amber-200"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    item.resolved ? "bg-emerald-100" : "bg-amber-100"
+                  }`}
+                >
+                  <span className={`text-sm font-medium ${item.resolved ? "text-emerald-700" : "text-amber-700"}`}>
+                    {item.employeeName.charAt(0)}
+                  </span>
+                </div>
+                <div>
+                  <p
+                    className={`text-sm font-medium ${
+                      item.resolved ? "text-emerald-700 line-through" : "text-foreground"
+                    }`}
+                  >
+                    {item.employeeName}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {item.equipmentName} • {item.daysOverdue} dias em atraso
+                  </p>
+                </div>
+              </div>
+
+              {!item.resolved ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleOpenOffboardingModal(item)}
+                  className="gap-1.5 text-xs border-amber-300 hover:bg-amber-100"
+                >
+                  <UserMinus className="w-3 h-3" />
+                  Resolver
+                </Button>
+              ) : (
+                <span className="text-xs text-emerald-600 font-medium px-2 py-1 bg-emerald-100 rounded-full">
+                  Resolvido
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Status Overview */}
+
       {/* Recent Allocations */}
       <div className="card-minimal">
         <h2 className="text-base font-semibold text-foreground mb-6">Últimas Alocações</h2>
         {recentAllocations.length > 0 ? (
           <div className="space-y-3">
             {recentAllocations.map((allocation) => (
-              <div 
+              <div
                 key={allocation.id}
                 className="flex items-center justify-between p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
               >
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-primary font-medium">
-                      {allocation.employee.name.charAt(0)}
-                    </span>
+                    <span className="text-primary font-medium">{allocation.employee.name.charAt(0)}</span>
                   </div>
                   <div>
                     <p className="font-medium text-foreground">{allocation.employee.name}</p>
@@ -344,14 +327,16 @@ export default function Dashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-muted-foreground">
-                    {new Date(allocation.allocatedAt).toLocaleDateString('pt-BR')}
+                    {new Date(allocation.allocatedAt).toLocaleDateString("pt-BR")}
                   </p>
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    allocation.returnedAt 
-                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
-                      : 'bg-blue-50 text-blue-700 border border-blue-200'
-                  }`}>
-                    {allocation.returnedAt ? 'Devolvido' : 'Alocado'}
+                  <span
+                    className={`text-xs px-2 py-1 rounded-full ${
+                      allocation.returnedAt
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                        : "bg-blue-50 text-blue-700 border border-blue-200"
+                    }`}
+                  >
+                    {allocation.returnedAt ? "Devolvido" : "Alocado"}
                   </span>
                 </div>
               </div>
@@ -363,16 +348,12 @@ export default function Dashboard() {
       </div>
 
       {/* Onboarding Modal */}
-      <OnboardingModal
-        open={isOnboardingOpen}
-        onOpenChange={setIsOnboardingOpen}
-        onSuccess={loadData}
-      />
+      <OnboardingModal open={isOnboardingOpen} onOpenChange={setIsOnboardingOpen} onSuccess={loadData} />
 
       {/* Offboarding Modal */}
       <OffboardingModal
         open={offboardingModal.open}
-        onOpenChange={(open) => setOffboardingModal(prev => ({ ...prev, open }))}
+        onOpenChange={(open) => setOffboardingModal((prev) => ({ ...prev, open }))}
         employeeId={offboardingModal.employeeId}
         employeeName={offboardingModal.employeeName}
         onSuccess={handleOffboardingSuccess}
