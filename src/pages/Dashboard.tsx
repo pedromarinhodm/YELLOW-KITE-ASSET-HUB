@@ -184,8 +184,66 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Overdue Returns and Status Overview - Side by Side */}
+      {/* Status Overview and Overdue Returns - Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Status Overview */}
+        <div className="card-minimal">
+          <h2 className="text-base font-semibold text-foreground mb-6">Status dos Equipamentos</h2>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                <span className="text-muted-foreground">Disponível</span>
+              </div>
+              <span className="font-medium text-foreground">{stats.available}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                <span className="text-muted-foreground">Alocado</span>
+              </div>
+              <span className="font-medium text-foreground">{stats.allocated}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                <span className="text-muted-foreground">Manutenção</span>
+              </div>
+              <span className="font-medium text-foreground">{stats.maintenance}</span>
+            </div>
+          </div>
+
+          {/* Progress Bar - Fixed calculation */}
+          <div className="mt-6">
+            <div className="h-3 sm:h-2 rounded-full overflow-hidden flex bg-muted/30">
+              {stats.totalEquipments > 0 ? (
+                <>
+                  {stats.available > 0 && (
+                    <div
+                      className="bg-emerald-500 transition-all duration-300"
+                      style={{ flex: stats.available }}
+                    />
+                  )}
+                  {stats.allocated > 0 && (
+                    <div
+                      className="bg-blue-500 transition-all duration-300"
+                      style={{ flex: stats.allocated }}
+                    />
+                  )}
+                  {stats.maintenance > 0 && (
+                    <div
+                      className="bg-amber-500 transition-all duration-300"
+                      style={{ flex: stats.maintenance }}
+                    />
+                  )}
+                </>
+              ) : (
+                <div className="w-full bg-muted/50" />
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Overdue Returns Alert */}
         <div className="card-minimal border-amber-200 bg-amber-50/50">
           <div className="flex items-center gap-3 mb-4">
@@ -249,58 +307,6 @@ export default function Dashboard() {
                 )}
               </div>
             ))}
-          </div>
-        </div>
-
-        {/* Status Overview */}
-        <div className="card-minimal">
-          <h2 className="text-base font-semibold text-foreground mb-6">Status dos Equipamentos</h2>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-                <span className="text-muted-foreground">Disponível</span>
-              </div>
-              <span className="font-medium text-foreground">{stats.available}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                <span className="text-muted-foreground">Alocado</span>
-              </div>
-              <span className="font-medium text-foreground">{stats.allocated}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-                <span className="text-muted-foreground">Manutenção</span>
-              </div>
-              <span className="font-medium text-foreground">{stats.maintenance}</span>
-            </div>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="mt-6">
-            <div className="h-3 sm:h-2 rounded-full overflow-hidden flex bg-muted/30">
-              {stats.totalEquipments > 0 ? (
-                <>
-                  <div
-                    className="bg-emerald-500 transition-all duration-300 min-w-[4px]"
-                    style={{ width: `${(stats.available / stats.totalEquipments) * 100}%` }}
-                  />
-                  <div
-                    className="bg-blue-500 transition-all duration-300 min-w-[4px]"
-                    style={{ width: `${(stats.allocated / stats.totalEquipments) * 100}%` }}
-                  />
-                  <div
-                    className="bg-amber-500 transition-all duration-300 min-w-[4px]"
-                    style={{ width: `${(stats.maintenance / stats.totalEquipments) * 100}%` }}
-                  />
-                </>
-              ) : (
-                <div className="w-full bg-muted/50" />
-              )}
-            </div>
           </div>
         </div>
       </div>
