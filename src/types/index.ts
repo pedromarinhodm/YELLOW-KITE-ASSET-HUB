@@ -68,25 +68,6 @@ export interface AllocationWithDetails extends Allocation {
   equipment: Equipment;
 }
 
-// Reservas para equipamentos de campo
-export interface Reservation {
-  id: string;
-  employeeId: string;
-  equipmentId: string;
-  startDate: string;
-  endDate: string;
-  pickedUpAt?: string;
-  returnedAt?: string;
-  notes?: string;
-  status: 'pending' | 'active' | 'returned' | 'overdue';
-  createdAt: string;
-}
-
-export interface ReservationWithDetails extends Reservation {
-  employee: Employee;
-  equipment: Equipment;
-}
-
 export const CATEGORY_LABELS: Record<EquipmentCategory, string> = {
   notebook: 'Notebook',
   monitor: 'Monitor',
@@ -112,11 +93,4 @@ export const STATUS_LABELS: Record<EquipmentStatus, string> = {
 export const CLASSIFICATION_LABELS: Record<EquipmentClassification, string> = {
   station: 'Equipamento de Estação',
   field: 'Equipamento de Campo',
-};
-
-export const RESERVATION_STATUS_LABELS: Record<Reservation['status'], string> = {
-  pending: 'Agendada',
-  active: 'Em Uso',
-  returned: 'Devolvido',
-  overdue: 'Atrasado',
 };

@@ -1,4 +1,4 @@
-import { Equipment, Employee, Allocation, Reservation } from '@/types';
+import { Equipment, Employee, Allocation } from '@/types';
 
 export const mockEquipments: Equipment[] = [
   // Equipamentos de Estação (fixos)
@@ -204,27 +204,3 @@ export const mockAllocations: Allocation[] = [
   },
 ];
 
-// Reservas para equipamentos de campo
-export const mockReservations: Reservation[] = [
-  {
-    id: '1',
-    employeeId: '3',
-    equipmentId: '9',
-    startDate: '2024-02-01T09:00:00Z',
-    endDate: '2024-02-03T18:00:00Z',
-    pickedUpAt: '2024-02-01T09:30:00Z',
-    status: 'active',
-    notes: 'Gravação evento corporativo',
-    createdAt: '2024-01-28T10:00:00Z',
-  },
-  {
-    id: '2',
-    employeeId: '4',
-    equipmentId: '10',
-    startDate: '2024-02-05T08:00:00Z',
-    endDate: '2024-02-06T20:00:00Z',
-    status: 'pending',
-    notes: 'Fotos para campanha de marketing',
-    createdAt: '2024-02-01T14:00:00Z',
-  },
-];
