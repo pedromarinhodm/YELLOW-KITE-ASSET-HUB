@@ -80,13 +80,11 @@ export default function Dashboard() {
     const today = new Date();
     
     const pendencias: OverdueReturn[] = activeAllocations.map((allocation) => {
-      const allocatedDate = new Date(allocation.allocatedAt);
-      // Simular prazo de 30 dias após alocação
-      const dueDate = new Date(allocatedDate);
-      dueDate.setDate(dueDate.getDate() + 30);
-      
-      const diffTime = today.getTime() - dueDate.getTime();
-      const daysOverdue = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+      // Para fins de demonstração, simular uma data de vencimento recente
+      // Usando a data atual menos um período aleatório para criar atrasos realistas
+      const randomDaysOverdue = Math.floor(Math.random() * 15) + 3; // 3 a 17 dias de atraso
+      const dueDate = new Date(today);
+      dueDate.setDate(dueDate.getDate() - randomDaysOverdue);
       
       return {
         id: `overdue-${allocation.id}`,
@@ -94,10 +92,10 @@ export default function Dashboard() {
         employeeName: allocation.employee.name,
         equipmentName: allocation.equipment.name,
         dueDate: dueDate.toISOString().split('T')[0],
-        daysOverdue,
+        daysOverdue: randomDaysOverdue,
         resolved: false,
       };
-    }).filter(item => item.daysOverdue > 0); // Apenas itens realmente em atraso
+    });
 
     setOverdueReturns(pendencias);
     setLoading(false);
