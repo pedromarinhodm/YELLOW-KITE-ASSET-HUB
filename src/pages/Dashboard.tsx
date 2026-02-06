@@ -8,37 +8,6 @@ import { Button } from "@/components/ui/button";
 import { OffboardingModal } from "@/components/OffboardingModal";
 import { OnboardingModal } from "@/components/OnboardingModal";
 
-// Dados fictícios de pendências
-const mockOverdueReturns: OverdueReturn[] = [
-  {
-    id: "1",
-    employeeId: "4",
-    employeeName: "Rafael Oliveira",
-    equipmentName: 'MacBook Pro 14"',
-    dueDate: "2026-01-20",
-    daysOverdue: 17,
-    resolved: false,
-  },
-  {
-    id: "2",
-    employeeId: "2",
-    employeeName: "Carlos Mendes",
-    equipmentName: "Monitor LG UltraWide",
-    dueDate: "2026-01-28",
-    daysOverdue: 9,
-    resolved: false,
-  },
-  {
-    id: "3",
-    employeeId: "3",
-    employeeName: "Beatriz Costa",
-    equipmentName: "iPhone 15 Pro",
-    dueDate: "2026-02-01",
-    daysOverdue: 5,
-    resolved: false,
-  },
-];
-
 interface Stats {
   totalEquipments: number;
   totalValue: number;
@@ -58,7 +27,7 @@ export default function Dashboard() {
     totalEmployees: 0,
   });
   const [recentAllocations, setRecentAllocations] = useState<AllocationWithDetails[]>([]);
-  const [overdueReturns, setOverdueReturns] = useState<OverdueReturn[]>(mockOverdueReturns);
+  const [overdueReturns, setOverdueReturns] = useState<OverdueReturn[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Modal states
@@ -105,6 +74,32 @@ export default function Dashboard() {
     });
 
     setRecentAllocations(allocations.slice(-5).reverse());
+
+    // Gerar pendências a partir das alocações ativas (não devolvidas)
+    const activeAllocations = allocations.filter(a => !a.returnedAt);
+    const today = new Date();
+    
+    const pendencias: OverdueReturn[] = activeAllocations.map((allocation) => {
+      const allocatedDate = new Date(allocation.allocatedAt);
+      // Simular prazo de 30 dias após alocação
+      const dueDate = new Date(allocatedDate);
+      dueDate.setDate(dueDate.getDate() + 30);
+      
+      const diffTime = today.getTime() - dueDate.getTime();
+      const daysOverdue = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+      
+      return {
+        id: `overdue-${allocation.id}`,
+        employeeId: allocation.employee.id,
+        employeeName: allocation.employee.name,
+        equipmentName: allocation.equipment.name,
+        dueDate: dueDate.toISOString().split('T')[0],
+        daysOverdue,
+        resolved: false,
+      };
+    }).filter(item => item.daysOverdue > 0); // Apenas itens realmente em atraso
+
+    setOverdueReturns(pendencias);
     setLoading(false);
   };
 
