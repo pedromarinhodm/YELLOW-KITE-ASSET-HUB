@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Search, Filter, Edit2, Trash2, Building2, Tent } from "lucide-react";
+import { Plus, Search, Filter, Edit2, Trash2, Building2, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -28,7 +28,6 @@ import {
   FIELD_CATEGORIES,
 } from "@/types";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { CategoryIcon } from "@/components/ui/CategoryIcon";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -255,7 +254,7 @@ export default function Inventory() {
                     </>
                   ) : (
                     <>
-                      <Tent className="w-4 h-4 text-amber-500" />
+                      <Smartphone className="w-4 h-4 text-amber-500" />
                       <span className="font-medium">Equipamento de Externas</span>
                       <span className="text-muted-foreground">• Uso compartilhado</span>
                     </>
@@ -339,7 +338,7 @@ export default function Inventory() {
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
-              <Tent className="w-5 h-5 text-amber-500" />
+              <Smartphone className="w-5 h-5 text-amber-500" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Equipamentos de Externas</p>
@@ -397,34 +396,23 @@ export default function Inventory() {
               key={equipment.id}
               className="card-minimal flex flex-col sm:flex-row sm:items-center gap-4 hover:border-primary/30 transition-colors"
             >
-              <div className="flex items-center gap-4 flex-1">
-                <div
-                  className={cn(
-                    "w-11 h-11 rounded-xl flex items-center justify-center",
-                    equipment.classification === "field" ? "bg-amber-500/10" : "bg-muted",
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-medium text-foreground truncate">{equipment.name}</h3>
+                  {equipment.classification === "station" && (
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+                      Setup
+                    </span>
                   )}
-                >
-                  <CategoryIcon
-                    category={equipment.category}
-                    className={cn(
-                      "w-5 h-5",
-                      equipment.classification === "field" ? "text-amber-600" : "text-muted-foreground",
-                    )}
-                  />
+                  {equipment.classification === "field" && (
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 border border-amber-500/20">
+                      Externas
+                    </span>
+                  )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-medium text-foreground truncate">{equipment.name}</h3>
-                    {equipment.classification === "field" && (
-                      <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 border border-amber-500/20">
-                        Externas
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {CATEGORY_LABELS[equipment.category]} • {equipment.serialNumber}
-                  </p>
-                </div>
+                <p className="text-sm text-muted-foreground">
+                  {CATEGORY_LABELS[equipment.category]} • {equipment.serialNumber}
+                </p>
               </div>
 
               <div className="flex items-center gap-6">

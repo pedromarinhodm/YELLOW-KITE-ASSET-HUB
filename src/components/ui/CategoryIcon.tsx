@@ -25,11 +25,15 @@ const iconMap: Record<EquipmentCategory, React.ComponentType<{ className?: strin
   mouse: Mouse,
   headset: Headphones,
   webcam: Video,
+  accessories_station: Package,
+  other_station: Package,
   smartphone: Smartphone,
-  tripod: Video, // Using Video as a stand-in for tripod
+  tripod: Video,
   ringlight: Lightbulb,
   camera: Camera,
   microphone: Mic,
+  accessories_field: Package,
+  other_field: Package,
   other: Package,
 };
 

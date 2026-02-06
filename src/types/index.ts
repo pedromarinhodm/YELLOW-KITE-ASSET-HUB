@@ -12,21 +12,25 @@ export type EquipmentCategory =
   | 'mouse' 
   | 'headset' 
   | 'webcam' 
+  | 'accessories_station'
+  | 'other_station'
   | 'smartphone'
   | 'tripod'
   | 'ringlight'
   | 'camera'
   | 'microphone'
+  | 'accessories_field'
+  | 'other_field'
   | 'other';
 
 // Categorias de Setup de Mesa (fixos/híbridos)
 export const STATION_CATEGORIES: EquipmentCategory[] = [
-  'notebook', 'monitor', 'keyboard', 'mouse', 'headset', 'webcam'
+  'notebook', 'monitor', 'keyboard', 'mouse', 'headset', 'webcam', 'accessories_station', 'other_station'
 ];
 
 // Categorias de Externas (rotativos/externos)
 export const FIELD_CATEGORIES: EquipmentCategory[] = [
-  'smartphone', 'tripod', 'ringlight', 'camera', 'microphone'
+  'smartphone', 'tripod', 'ringlight', 'camera', 'microphone', 'accessories_field', 'other_field'
 ];
 
 export interface Equipment {
@@ -86,11 +90,15 @@ export const CATEGORY_LABELS: Record<EquipmentCategory, string> = {
   mouse: 'Mouse',
   headset: 'Headset',
   webcam: 'Webcam',
+  accessories_station: 'Acessórios',
+  other_station: 'Outros',
   smartphone: 'Smartphone',
   tripod: 'Tripé',
   ringlight: 'Ring Light',
   camera: 'Câmera',
   microphone: 'Microfone',
+  accessories_field: 'Acessórios',
+  other_field: 'Outros',
   other: 'Outro',
 };
 
