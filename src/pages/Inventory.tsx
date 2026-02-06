@@ -200,7 +200,7 @@ export default function Inventory() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Inventário</h1>
-          <p className="text-muted-foreground">Gerencie os equipamentos de estação e campo</p>
+          <p className="text-muted-foreground">Gerencie os equipamentos de setup de mesa e externas</p>
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -240,7 +240,7 @@ export default function Inventory() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="section-station" disabled className="font-semibold text-xs text-muted-foreground">
-                        — Estação —
+                        — Setup de Mesa —
                       </SelectItem>
                       {STATION_CATEGORIES.map(cat => (
                         <SelectItem key={cat} value={cat}>
@@ -248,7 +248,7 @@ export default function Inventory() {
                         </SelectItem>
                       ))}
                       <SelectItem value="section-field" disabled className="font-semibold text-xs text-muted-foreground">
-                        — Campo —
+                        — Externas —
                       </SelectItem>
                       {FIELD_CATEGORIES.map(cat => (
                         <SelectItem key={cat} value={cat}>
@@ -285,14 +285,14 @@ export default function Inventory() {
                   {formData.classification === 'station' ? (
                     <>
                       <Building2 className="w-4 h-4 text-primary" />
-                      <span className="font-medium">Equipamento de Estação</span>
+                      <span className="font-medium">Equipamento de Setup de Mesa</span>
                       <span className="text-muted-foreground">• Atribuição fixa (Onboarding/Offboarding)</span>
                     </>
                   ) : (
                     <>
                       <Tent className="w-4 h-4 text-amber-500" />
-                      <span className="font-medium">Equipamento de Campo</span>
-                      <span className="text-muted-foreground">• Reserva por período</span>
+                      <span className="font-medium">Equipamento de Externas</span>
+                      <span className="text-muted-foreground">• Uso compartilhado</span>
                     </>
                   )}
                 </div>
@@ -352,34 +352,34 @@ export default function Inventory() {
       <div className="grid grid-cols-2 gap-4">
         <div 
           className={cn(
-            "card-minimal cursor-pointer transition-all",
+            "card-minimal cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-md hover:border-primary/50",
             filterClassification === 'station' && "ring-2 ring-primary"
           )}
           onClick={() => setFilterClassification(filterClassification === 'station' ? 'all' : 'station')}
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
               <Building2 className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Equipamentos de Estação</p>
+              <p className="text-sm text-muted-foreground">Equipamentos de Setup de Mesa</p>
               <p className="text-xl font-semibold">{equipments.filter(e => e.classification === 'station').length}</p>
             </div>
           </div>
         </div>
         <div 
           className={cn(
-            "card-minimal cursor-pointer transition-all",
+            "card-minimal cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-md hover:border-amber-500/50",
             filterClassification === 'field' && "ring-2 ring-amber-500"
           )}
           onClick={() => setFilterClassification(filterClassification === 'field' ? 'all' : 'field')}
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
               <Tent className="w-5 h-5 text-amber-500" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Equipamentos de Campo</p>
+              <p className="text-sm text-muted-foreground">Equipamentos de Externas</p>
               <p className="text-xl font-semibold">{equipments.filter(e => e.classification === 'field').length}</p>
             </div>
           </div>
@@ -449,7 +449,7 @@ export default function Inventory() {
                     <h3 className="font-medium text-foreground truncate">{equipment.name}</h3>
                     {equipment.classification === 'field' && (
                       <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 border border-amber-500/20">
-                        Campo
+                        Externas
                       </span>
                     )}
                   </div>
