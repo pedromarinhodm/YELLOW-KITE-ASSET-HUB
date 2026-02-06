@@ -5,47 +5,79 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { CategoryIcon } from '@/components/ui/CategoryIcon';
+import { employeeService } from '@/services/employeeService';
 import { allocationService } from '@/services/allocationService';
-import { AllocationWithDetails } from '@/types';
+import { Employee, AllocationWithDetails } from '@/types';
 import { toast } from 'sonner';
 import { UserMinus, Package } from 'lucide-react';
 
 interface OffboardingModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  employeeId: string;
-  employeeName: string;
+  employeeId?: string;
+  employeeName?: string;
   onSuccess?: () => void;
 }
 
 export function OffboardingModal({
   open,
   onOpenChange,
-  employeeId,
-  employeeName,
+  employeeId: initialEmployeeId,
+  employeeName: initialEmployeeName,
   onSuccess,
 }: OffboardingModalProps) {
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
+  const [selectedEmployeeName, setSelectedEmployeeName] = useState<string>('');
   const [activeAllocations, setActiveAllocations] = useState<AllocationWithDetails[]>([]);
   const [selectedAllocations, setSelectedAllocations] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
-  const [loadingAllocations, setLoadingAllocations] = useState(true);
+  const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
-    if (open && employeeId) {
-      loadActiveAllocations();
+    if (open) {
+      loadEmployees();
+      if (initialEmployeeId) {
+        setSelectedEmployeeId(initialEmployeeId);
+        setSelectedEmployeeName(initialEmployeeName || '');
+        loadActiveAllocations(initialEmployeeId);
+      } else {
+        setSelectedEmployeeId('');
+        setSelectedEmployeeName('');
+        setActiveAllocations([]);
+        setSelectedAllocations([]);
+      }
     }
-  }, [open, employeeId]);
+  }, [open, initialEmployeeId, initialEmployeeName]);
 
-  const loadActiveAllocations = async () => {
-    setLoadingAllocations(true);
+  const loadEmployees = async () => {
     try {
-      const actives = await allocationService.getActiveByEmployee(employeeId);
+      const emps = await employeeService.getAll();
+      setEmployees(emps);
+    } catch (error) {
+      console.error('Error loading employees:', error);
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  const loadActiveAllocations = async (empId: string) => {
+    setLoadingData(true);
+    try {
+      const actives = await allocationService.getActiveByEmployee(empId);
       setActiveAllocations(actives);
       // Pre-select all allocations
       setSelectedAllocations(actives.map(a => a.id));
@@ -53,8 +85,16 @@ export function OffboardingModal({
       console.error('Error loading allocations:', error);
       toast.error('Erro ao carregar equipamentos');
     } finally {
-      setLoadingAllocations(false);
+      setLoadingData(false);
     }
+  };
+
+  const handleEmployeeChange = async (empId: string) => {
+    setSelectedEmployeeId(empId);
+    const emp = employees.find(e => e.id === empId);
+    setSelectedEmployeeName(emp?.name || '');
+    setSelectedAllocations([]);
+    await loadActiveAllocations(empId);
   };
 
   const handleToggleAllocation = (allocationId: string) => {
@@ -96,7 +136,10 @@ export function OffboardingModal({
   };
 
   const handleClose = () => {
+    setSelectedEmployeeId('');
+    setSelectedEmployeeName('');
     setSelectedAllocations([]);
+    setActiveAllocations([]);
     setNotes('');
     onOpenChange(false);
   };
@@ -104,6 +147,8 @@ export function OffboardingModal({
   const totalValue = activeAllocations
     .filter(a => selectedAllocations.includes(a.id))
     .reduce((sum, a) => sum + (a.equipment?.purchaseValue || 0), 0);
+
+  const showEmployeeSelector = !initialEmployeeId;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -116,70 +161,93 @@ export function OffboardingModal({
         </DialogHeader>
 
         <div className="space-y-6 mt-4">
-          {/* Employee Info */}
-          <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50">
-            <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-semibold text-lg">
-                {employeeName.charAt(0)}
-              </span>
+          {/* Employee Selector (when not pre-selected) */}
+          {showEmployeeSelector && (
+            <div className="space-y-2">
+              <Label>Colaborador</Label>
+              <Select value={selectedEmployeeId} onValueChange={handleEmployeeChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um colaborador" />
+                </SelectTrigger>
+                <SelectContent>
+                  {employees.map(emp => (
+                    <SelectItem key={emp.id} value={emp.id}>
+                      {emp.name} - {emp.department}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <div>
-              <p className="font-semibold text-foreground">{employeeName}</p>
-              <p className="text-sm text-muted-foreground">
-                {activeAllocations.length} equipamento(s) alocado(s)
-              </p>
+          )}
+
+          {/* Employee Info (when pre-selected) */}
+          {!showEmployeeSelector && selectedEmployeeName && (
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50">
+              <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
+                <span className="text-primary-foreground font-semibold text-lg">
+                  {selectedEmployeeName.charAt(0)}
+                </span>
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">{selectedEmployeeName}</p>
+                <p className="text-sm text-muted-foreground">
+                  {activeAllocations.length} equipamento(s) alocado(s)
+                </p>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Allocations List */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Equipamentos para Devolução</Label>
-              {activeAllocations.length > 1 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleSelectAll}
-                  className="text-xs"
-                >
-                  {selectedAllocations.length === activeAllocations.length
-                    ? 'Desmarcar todos'
-                    : 'Selecionar todos'}
-                </Button>
-              )}
-            </div>
-            
-            <div className="max-h-[200px] overflow-y-auto border rounded-xl p-2 space-y-2">
-              {loadingAllocations ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent"></div>
-                </div>
-              ) : activeAllocations.length > 0 ? (
-                activeAllocations.map(alloc => (
-                  <div
-                    key={alloc.id}
-                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
-                    onClick={() => handleToggleAllocation(alloc.id)}
+          {selectedEmployeeId && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Equipamentos para Devolução</Label>
+                {activeAllocations.length > 1 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSelectAll}
+                    className="text-xs"
                   >
-                    <Checkbox checked={selectedAllocations.includes(alloc.id)} />
-                    <CategoryIcon category={alloc.equipment.category} className="w-5 h-5 text-muted-foreground" />
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{alloc.equipment.name}</p>
-                      <p className="text-xs text-muted-foreground">{alloc.equipment.serialNumber}</p>
-                    </div>
-                    <span className="text-sm font-medium">
-                      R$ {alloc.equipment.purchaseValue.toLocaleString('pt-BR')}
-                    </span>
+                    {selectedAllocations.length === activeAllocations.length
+                      ? 'Desmarcar todos'
+                      : 'Selecionar todos'}
+                  </Button>
+                )}
+              </div>
+              
+              <div className="max-h-[200px] overflow-y-auto border rounded-xl p-2 space-y-2">
+                {loadingData ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent"></div>
                   </div>
-                ))
-              ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-                  <Package className="w-8 h-8 mb-2" />
-                  <p className="text-sm">Nenhum equipamento alocado</p>
-                </div>
-              )}
+                ) : activeAllocations.length > 0 ? (
+                  activeAllocations.map(alloc => (
+                    <div
+                      key={alloc.id}
+                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
+                      onClick={() => handleToggleAllocation(alloc.id)}
+                    >
+                      <Checkbox checked={selectedAllocations.includes(alloc.id)} />
+                      <CategoryIcon category={alloc.equipment.category} className="w-5 h-5 text-muted-foreground" />
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{alloc.equipment.name}</p>
+                        <p className="text-xs text-muted-foreground">{alloc.equipment.serialNumber}</p>
+                      </div>
+                      <span className="text-sm font-medium">
+                        R$ {alloc.equipment.purchaseValue.toLocaleString('pt-BR')}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                    <Package className="w-8 h-8 mb-2" />
+                    <p className="text-sm">Nenhum equipamento alocado</p>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Selected Summary */}
           {selectedAllocations.length > 0 && (
@@ -194,14 +262,16 @@ export function OffboardingModal({
           )}
 
           {/* Notes */}
-          <div className="space-y-2">
-            <Label>Observações</Label>
-            <Textarea
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              placeholder="Ex: Equipamentos devolvidos em bom estado"
-            />
-          </div>
+          {selectedEmployeeId && (
+            <div className="space-y-2">
+              <Label>Observações</Label>
+              <Textarea
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                placeholder="Ex: Equipamentos devolvidos em bom estado"
+              />
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex justify-end gap-3">

@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { 
   Users, 
   DollarSign,
@@ -14,6 +13,7 @@ import { allocationService } from '@/services/allocationService';
 import { AllocationWithDetails, OverdueReturn } from '@/types';
 import { Button } from '@/components/ui/button';
 import { OffboardingModal } from '@/components/OffboardingModal';
+import { OnboardingModal } from '@/components/OnboardingModal';
 
 // Dados fictícios de pendências
 const mockOverdueReturns: OverdueReturn[] = [
@@ -56,7 +56,6 @@ interface Stats {
 }
 
 export default function Dashboard() {
-  const navigate = useNavigate();
   const [stats, setStats] = useState<Stats>({
     totalEquipments: 0,
     totalValue: 0,
@@ -69,7 +68,8 @@ export default function Dashboard() {
   const [overdueReturns, setOverdueReturns] = useState<OverdueReturn[]>(mockOverdueReturns);
   const [loading, setLoading] = useState(true);
   
-  // Offboarding modal state
+  // Modal states
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [offboardingModal, setOffboardingModal] = useState<{
     open: boolean;
     employeeId: string;
@@ -140,14 +140,14 @@ export default function Dashboard() {
         {/* Quick Actions */}
         <div className="flex gap-3">
           <Button 
-            onClick={() => navigate('/allocations?action=onboarding')}
+            onClick={() => setIsOnboardingOpen(true)}
             className="gap-2"
           >
             <UserPlus className="w-4 h-4" />
             Onboarding
           </Button>
           <Button 
-            onClick={() => navigate('/allocations?action=offboarding')}
+            onClick={() => setOffboardingModal({ open: true, employeeId: '', employeeName: '' })}
             variant="outline"
             className="gap-2"
           >
@@ -361,6 +361,13 @@ export default function Dashboard() {
           <p className="text-muted-foreground text-center py-8">Nenhuma alocação registrada</p>
         )}
       </div>
+
+      {/* Onboarding Modal */}
+      <OnboardingModal
+        open={isOnboardingOpen}
+        onOpenChange={setIsOnboardingOpen}
+        onSuccess={loadData}
+      />
 
       {/* Offboarding Modal */}
       <OffboardingModal
