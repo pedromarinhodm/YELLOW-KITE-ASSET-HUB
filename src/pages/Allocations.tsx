@@ -79,8 +79,10 @@ export default function Allocations() {
   };
 
   const loadAvailableEquipments = async () => {
-    const equipments = await equipmentService.getByStatus('available');
-    setAvailableEquipments(equipments);
+    // Only load station equipment for allocations (fixed assignments)
+    const allAvailable = await equipmentService.getByStatus('available');
+    const stationEquipments = allAvailable.filter(e => e.classification === 'station');
+    setAvailableEquipments(stationEquipments);
   };
 
   const loadActiveAllocations = async (employeeId: string) => {
