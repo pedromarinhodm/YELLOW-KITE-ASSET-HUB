@@ -107,6 +107,9 @@ export default function Dashboard() {
 
   const pendingOverdueCount = overdueReturns.filter((item) => !item.resolved).length;
 
+  // Cálculo da soma para a barra preencher 100% sem erros de arredondamento ou espaços vazios
+  const totalForProgress = stats.available + stats.allocated + stats.maintenance;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -139,6 +142,7 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Grid Superior de Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="stat-card">
           <div className="flex items-center justify-between">
@@ -179,9 +183,9 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Grid Invertida: Status Overview primeiro, Pendências depois */}
+      {/* Inversão: Status à esquerda, Pendências à direita */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Status Overview (Agora à esquerda no desktop) */}
+        {/* Status Overview */}
         <div className="card-minimal">
           <h2 className="text-base font-semibold text-foreground mb-6">Status dos Equipamentos</h2>
           <div className="space-y-4">
@@ -208,30 +212,32 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* Barra de Progresso Ajustada */}
           <div className="mt-6">
             <div className="h-3 sm:h-2 rounded-full overflow-hidden flex bg-muted/30">
-              {stats.totalEquipments > 0 ? (
+              {totalForProgress > 0 ? (
                 <>
                   <div
-                    className="bg-emerald-500 transition-all duration-300"
-                    style={{ width: `${(stats.available / stats.totalEquipments) * 100}%` }}
+                    className="bg-emerald-500 transition-all duration-300 h-full"
+                    style={{ width: `${(stats.available / totalForProgress) * 100}%` }}
                   />
                   <div
-                    className="bg-blue-500 transition-all duration-300"
-                    style={{ width: `${(stats.allocated / stats.totalEquipments) * 100}%` }}
+                    className="bg-blue-500 transition-all duration-300 h-full"
+                    style={{ width: `${(stats.allocated / totalForProgress) * 100}%` }}
                   />
                   <div
-                    className="bg-amber-500 transition-all duration-300"
-                    style={{ width: `${(stats.maintenance / stats.totalEquipments) * 100}%` }}
+                    className="bg-amber-500 transition-all duration-300 h-full"
+                    style={{ width: `${(stats.maintenance / totalForProgress) * 100}%` }}
                   />
                 </>
               ) : (
                 <div className="w-full bg-muted/50" />
               )}
             </div>
-          </div>          
+          </div>
+        </div>
 
-        {/* Overdue Returns Alert (Agora à direita no desktop) */}
+        {/* Pendências de Devolução */}
         <div className="card-minimal border-amber-200 bg-amber-50/50">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
@@ -298,7 +304,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Recent Allocations */}
+      {/* Últimas Alocações */}
       <div className="card-minimal">
         <h2 className="text-base font-semibold text-foreground mb-6">Últimas Alocações</h2>
         {recentAllocations.length > 0 ? (
@@ -339,8 +345,8 @@ export default function Dashboard() {
         )}
       </div>
 
+      {/* Modais */}
       <OnboardingModal open={onboardingOpen} onOpenChange={setOnboardingOpen} onSuccess={loadData} />
-
       <OffboardingModal
         open={offboardingModal.open}
         onOpenChange={(open) => setOffboardingModal((prev) => ({ ...prev, open }))}
