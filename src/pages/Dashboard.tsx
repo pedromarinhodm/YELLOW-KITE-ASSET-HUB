@@ -296,7 +296,7 @@ export default function Dashboard() {
                   />
                 </>
               ) : (
-                <div className="w-full bg-muted/50" />
+                
               )}
             </div>
           </div>
