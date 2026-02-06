@@ -111,9 +111,30 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground">Visão geral do inventário</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground">Visão geral do inventário</p>
+        </div>
+        
+        {/* Quick Actions */}
+        <div className="flex gap-3">
+          <Button 
+            onClick={() => navigate('/allocations?action=onboarding')}
+            className="gap-2"
+          >
+            <UserPlus className="w-4 h-4" />
+            Iniciar Onboarding
+          </Button>
+          <Button 
+            onClick={() => navigate('/allocations?action=offboarding')}
+            variant="outline"
+            className="gap-2"
+          >
+            <UserMinus className="w-4 h-4" />
+            Iniciar Offboarding
+          </Button>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -154,28 +175,6 @@ export default function Dashboard() {
               <Users className="w-6 h-6 text-blue-600" />
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="card-minimal">
-        <h2 className="text-base font-semibold text-foreground mb-4">Ações Rápidas</h2>
-        <div className="flex flex-wrap gap-3">
-          <Button 
-            onClick={() => navigate('/allocations?action=onboarding')}
-            className="gap-2"
-          >
-            <UserPlus className="w-4 h-4" />
-            Iniciar Onboarding
-          </Button>
-          <Button 
-            onClick={() => navigate('/allocations?action=offboarding')}
-            variant="outline"
-            className="gap-2"
-          >
-            <UserMinus className="w-4 h-4" />
-            Iniciar Offboarding
-          </Button>
         </div>
       </div>
 
