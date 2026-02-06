@@ -91,6 +91,6 @@ export const STATUS_LABELS: Record<EquipmentStatus, string> = {
 };
 
 export const CLASSIFICATION_LABELS: Record<EquipmentClassification, string> = {
-  station: 'Equipamento de Estação',
-  field: 'Equipamento de Campo',
+  station: 'Equipamento de Setup de Mesa',
+  field: 'Equipamento de Externas',
 };
