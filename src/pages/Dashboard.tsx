@@ -178,8 +178,9 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Overdue Returns Alert */}
-      {pendingOverdueCount > 0 && (
+      {/* Overdue Returns and Status Overview - Side by Side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Overdue Returns Alert */}
         <div className="card-minimal border-amber-200 bg-amber-50/50">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
@@ -231,7 +232,7 @@ export default function Dashboard() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleResolveOverdue(item.id)}
+                    onClick={() => navigate(`/allocations?action=offboarding&employeeId=${item.employeeId}`)}
                     className="gap-1.5 text-xs border-amber-300 hover:bg-amber-100"
                   >
                     <Check className="w-3 h-3" />
@@ -246,50 +247,32 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
-      )}
 
-      {/* Status Overview */}
-      <div className="card-minimal">
-        <h2 className="text-base font-semibold text-foreground mb-6">Status dos Equipamentos</h2>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-              <span className="text-muted-foreground">Disponível</span>
+        {/* Status Overview */}
+        <div className="card-minimal">
+          <h2 className="text-base font-semibold text-foreground mb-6">Status dos Equipamentos</h2>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                <span className="text-muted-foreground">Disponível</span>
+              </div>
+              <span className="font-medium text-foreground">{stats.available}</span>
             </div>
-            <span className="font-medium text-foreground">{stats.available}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-              <span className="text-muted-foreground">Alocado</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                <span className="text-muted-foreground">Alocado</span>
+              </div>
+              <span className="font-medium text-foreground">{stats.allocated}</span>
             </div>
-            <span className="font-medium text-foreground">{stats.allocated}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-              <span className="text-muted-foreground">Manutenção</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                <span className="text-muted-foreground">Manutenção</span>
+              </div>
+              <span className="font-medium text-foreground">{stats.maintenance}</span>
             </div>
-            <span className="font-medium text-foreground">{stats.maintenance}</span>
-          </div>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="mt-6">
-          <div className="h-2 rounded-full bg-muted overflow-hidden flex">
-            <div 
-              className="bg-emerald-500 transition-all"
-              style={{ width: `${(stats.available / stats.totalEquipments) * 100}%` }}
-            />
-            <div 
-              className="bg-blue-500 transition-all"
-              style={{ width: `${(stats.allocated / stats.totalEquipments) * 100}%` }}
-            />
-            <div 
-              className="bg-amber-500 transition-all"
-              style={{ width: `${(stats.maintenance / stats.totalEquipments) * 100}%` }}
-            />
           </div>
         </div>
       </div>
