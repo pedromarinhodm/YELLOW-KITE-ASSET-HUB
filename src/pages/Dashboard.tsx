@@ -6,14 +6,14 @@ import {
   Package,
   AlertTriangle,
   UserPlus,
-  UserMinus,
-  Check
+  UserMinus
 } from 'lucide-react';
 import { equipmentService } from '@/services/equipmentService';
 import { employeeService } from '@/services/employeeService';
 import { allocationService } from '@/services/allocationService';
 import { AllocationWithDetails, OverdueReturn } from '@/types';
 import { Button } from '@/components/ui/button';
+import { OffboardingModal } from '@/components/OffboardingModal';
 
 // Dados fictícios de pendências
 const mockOverdueReturns: OverdueReturn[] = [
@@ -68,35 +68,55 @@ export default function Dashboard() {
   const [recentAllocations, setRecentAllocations] = useState<AllocationWithDetails[]>([]);
   const [overdueReturns, setOverdueReturns] = useState<OverdueReturn[]>(mockOverdueReturns);
   const [loading, setLoading] = useState(true);
+  
+  // Offboarding modal state
+  const [offboardingModal, setOffboardingModal] = useState<{
+    open: boolean;
+    employeeId: string;
+    employeeName: string;
+  }>({ open: false, employeeId: '', employeeName: '' });
 
   useEffect(() => {
-    const loadData = async () => {
-      const equipmentStats = await equipmentService.getStats();
-      const employees = await employeeService.getAll();
-      const allocations = await allocationService.getAllWithDetails();
-
-      setStats({
-        totalEquipments: equipmentStats.total,
-        totalValue: equipmentStats.totalValue,
-        available: equipmentStats.available,
-        allocated: equipmentStats.allocated,
-        maintenance: equipmentStats.maintenance,
-        totalEmployees: employees.length,
-      });
-
-      setRecentAllocations(allocations.slice(-5).reverse());
-      setLoading(false);
-    };
-
     loadData();
   }, []);
 
-  const handleResolveOverdue = (id: string) => {
+  const handleOpenOffboardingModal = (item: OverdueReturn) => {
+    setOffboardingModal({
+      open: true,
+      employeeId: item.employeeId,
+      employeeName: item.employeeName,
+    });
+  };
+
+  const handleOffboardingSuccess = () => {
+    // Mark the item as resolved after successful offboarding
     setOverdueReturns(prev => 
       prev.map(item => 
-        item.id === id ? { ...item, resolved: true } : item
+        item.employeeId === offboardingModal.employeeId 
+          ? { ...item, resolved: true } 
+          : item
       )
     );
+    // Reload data to refresh allocations
+    loadData();
+  };
+
+  const loadData = async () => {
+    const equipmentStats = await equipmentService.getStats();
+    const employees = await employeeService.getAll();
+    const allocations = await allocationService.getAllWithDetails();
+
+    setStats({
+      totalEquipments: equipmentStats.total,
+      totalValue: equipmentStats.totalValue,
+      available: equipmentStats.available,
+      allocated: equipmentStats.allocated,
+      maintenance: equipmentStats.maintenance,
+      totalEmployees: employees.length,
+    });
+
+    setRecentAllocations(allocations.slice(-5).reverse());
+    setLoading(false);
   };
 
   const pendingOverdueCount = overdueReturns.filter(item => !item.resolved).length;
@@ -232,10 +252,10 @@ export default function Dashboard() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => navigate(`/allocations?action=offboarding&employeeId=${item.employeeId}`)}
+                    onClick={() => handleOpenOffboardingModal(item)}
                     className="gap-1.5 text-xs border-amber-300 hover:bg-amber-100"
                   >
-                    <Check className="w-3 h-3" />
+                    <UserMinus className="w-3 h-3" />
                     Resolver
                   </Button>
                 ) : (
@@ -341,6 +361,15 @@ export default function Dashboard() {
           <p className="text-muted-foreground text-center py-8">Nenhuma alocação registrada</p>
         )}
       </div>
+
+      {/* Offboarding Modal */}
+      <OffboardingModal
+        open={offboardingModal.open}
+        onOpenChange={(open) => setOffboardingModal(prev => ({ ...prev, open }))}
+        employeeId={offboardingModal.employeeId}
+        employeeName={offboardingModal.employeeName}
+        onSuccess={handleOffboardingSuccess}
+      />
     </div>
   );
 }
