@@ -186,6 +186,73 @@ export default function Dashboard() {
 
       {/* Overdue Returns and Status Overview - Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Overdue Returns Alert */}
+        <div className="card-minimal border-amber-200 bg-amber-50/50">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-foreground">Pendências de Devolução</h2>
+              <p className="text-sm text-muted-foreground">
+                {pendingOverdueCount} {pendingOverdueCount === 1 ? "pessoa" : "pessoas"} com equipamentos fora do prazo
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {overdueReturns.map((item) => (
+              <div
+                key={item.id}
+                className={`flex items-center justify-between p-3 rounded-lg transition-all ${
+                  item.resolved ? "bg-emerald-50 border border-emerald-200" : "bg-white border border-amber-200"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      item.resolved ? "bg-emerald-100" : "bg-amber-100"
+                    }`}
+                  >
+                    <span className={`text-sm font-medium ${item.resolved ? "text-emerald-700" : "text-amber-700"}`}>
+                      {item.employeeName.charAt(0)}
+                    </span>
+                  </div>
+                  <div>
+                    <p
+                      className={`text-sm font-medium ${
+                        item.resolved ? "text-emerald-700 line-through" : "text-foreground"
+                      }`}
+                    >
+                      {item.employeeName}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {item.equipmentName} • {item.daysOverdue} dias em atraso
+                    </p>
+                  </div>
+                </div>
+
+                {!item.resolved ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleOpenOffboardingModal(item)}
+                    className="gap-1.5 text-xs border-amber-300 hover:bg-amber-100"
+                  >
+                    <UserMinus className="w-3 h-3" />
+                    Resolver
+                  </Button>
+                ) : (
+                  <span className="text-xs text-emerald-600 font-medium px-2 py-1 bg-emerald-100 rounded-full">
+                    Resolvido
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Status Overview */}
         <div className="card-minimal">
           <h2 className="text-base font-semibold text-foreground mb-6">Status dos Equipamentos</h2>
           <div className="space-y-4">
@@ -237,74 +304,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-
-      {/* Overdue Returns Alert */}
-      <div className="card-minimal border-amber-200 bg-amber-50/50">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
-            <AlertTriangle className="w-5 h-5 text-amber-600" />
-          </div>
-          <div>
-            <h2 className="text-base font-semibold text-foreground">Pendências de Devolução</h2>
-            <p className="text-sm text-muted-foreground">
-              {pendingOverdueCount} {pendingOverdueCount === 1 ? "pessoa" : "pessoas"} com equipamentos fora do prazo
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          {overdueReturns.map((item) => (
-            <div
-              key={item.id}
-              className={`flex items-center justify-between p-3 rounded-lg transition-all ${
-                item.resolved ? "bg-emerald-50 border border-emerald-200" : "bg-white border border-amber-200"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    item.resolved ? "bg-emerald-100" : "bg-amber-100"
-                  }`}
-                >
-                  <span className={`text-sm font-medium ${item.resolved ? "text-emerald-700" : "text-amber-700"}`}>
-                    {item.employeeName.charAt(0)}
-                  </span>
-                </div>
-                <div>
-                  <p
-                    className={`text-sm font-medium ${
-                      item.resolved ? "text-emerald-700 line-through" : "text-foreground"
-                    }`}
-                  >
-                    {item.employeeName}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {item.equipmentName} • {item.daysOverdue} dias em atraso
-                  </p>
-                </div>
-              </div>
-
-              {!item.resolved ? (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleOpenOffboardingModal(item)}
-                  className="gap-1.5 text-xs border-amber-300 hover:bg-amber-100"
-                >
-                  <UserMinus className="w-3 h-3" />
-                  Resolver
-                </Button>
-              ) : (
-                <span className="text-xs text-emerald-600 font-medium px-2 py-1 bg-emerald-100 rounded-full">
-                  Resolvido
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Status Overview */}
 
       {/* Recent Allocations */}
       <div className="card-minimal">
