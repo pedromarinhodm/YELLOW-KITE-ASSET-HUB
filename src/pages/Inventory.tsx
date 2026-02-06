@@ -67,7 +67,6 @@ export default function Inventory() {
     serialNumber: '',
     purchaseValue: '',
     purchaseDate: '',
-    status: 'available' as EquipmentStatus,
   });
 
   useEffect(() => {
@@ -117,7 +116,6 @@ export default function Inventory() {
       serialNumber: '',
       purchaseValue: '',
       purchaseDate: '',
-      status: 'available',
     });
     setEditingEquipment(null);
   };
@@ -132,7 +130,6 @@ export default function Inventory() {
         serialNumber: equipment.serialNumber,
         purchaseValue: equipment.purchaseValue.toString(),
         purchaseDate: equipment.purchaseDate,
-        status: equipment.status,
       });
     } else {
       resetForm();
@@ -155,7 +152,6 @@ export default function Inventory() {
       serialNumber: formData.serialNumber,
       purchaseValue: parseFloat(formData.purchaseValue),
       purchaseDate: formData.purchaseDate,
-      status: formData.status,
     };
 
     if (editingEquipment) {
@@ -228,56 +224,35 @@ export default function Inventory() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="category">Categoria</Label>
-                  <Select
-                    value={formData.category}
-                    onValueChange={(value: EquipmentCategory) => handleCategoryChange(value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="section-station" disabled className="font-semibold text-xs text-muted-foreground">
-                        — Setup de Mesa —
+              <div className="space-y-2">
+                <Label htmlFor="category">Categoria</Label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value: EquipmentCategory) => handleCategoryChange(value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="section-station" disabled className="font-semibold text-xs text-muted-foreground">
+                      — Setup de Mesa —
+                    </SelectItem>
+                    {STATION_CATEGORIES.map(cat => (
+                      <SelectItem key={cat} value={cat}>
+                        {CATEGORY_LABELS[cat]}
                       </SelectItem>
-                      {STATION_CATEGORIES.map(cat => (
-                        <SelectItem key={cat} value={cat}>
-                          {CATEGORY_LABELS[cat]}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="section-field" disabled className="font-semibold text-xs text-muted-foreground">
-                        — Externas —
+                    ))}
+                    <SelectItem value="section-field" disabled className="font-semibold text-xs text-muted-foreground">
+                      — Externas —
+                    </SelectItem>
+                    {FIELD_CATEGORIES.map(cat => (
+                      <SelectItem key={cat} value={cat}>
+                        {CATEGORY_LABELS[cat]}
                       </SelectItem>
-                      {FIELD_CATEGORIES.map(cat => (
-                        <SelectItem key={cat} value={cat}>
-                          {CATEGORY_LABELS[cat]}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="other">Outro</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select
-                    value={formData.status}
-                    onValueChange={(value: EquipmentStatus) => setFormData({ ...formData, status: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statuses.map(status => (
-                        <SelectItem key={status} value={status}>
-                          {STATUS_LABELS[status]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                    ))}
+                    <SelectItem value="other">Outro</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="p-3 rounded-lg bg-muted/50 border">

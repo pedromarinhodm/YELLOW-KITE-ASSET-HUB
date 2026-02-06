@@ -35,9 +35,10 @@ export const equipmentService = {
     return equipments.filter(e => e.classification === classification && e.status === 'available');
   },
 
-  create: async (data: Omit<Equipment, 'id' | 'createdAt' | 'updatedAt'>): Promise<Equipment> => {
+  create: async (data: Omit<Equipment, 'id' | 'createdAt' | 'updatedAt' | 'status'>): Promise<Equipment> => {
     const newEquipment: Equipment = {
       ...data,
+      status: 'available',
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
