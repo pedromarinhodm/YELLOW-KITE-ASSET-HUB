@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { UserPlus, UserMinus, FileText, History, Search, CalendarIcon, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -36,6 +37,7 @@ import { CategoryIcon } from '@/components/ui/CategoryIcon';
 import { toast } from 'sonner';
 
 export default function Allocations() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [availableEquipments, setAvailableEquipments] = useState<Equipment[]>([]);
   const [allocations, setAllocations] = useState<AllocationWithDetails[]>([]);
@@ -66,6 +68,20 @@ export default function Allocations() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Handle URL action parameter to auto-open modals
+  useEffect(() => {
+    const action = searchParams.get('action');
+    if (action === 'onboarding' && !loading) {
+      handleOpenOnboarding();
+      // Clear the action param after opening
+      setSearchParams({});
+    } else if (action === 'offboarding' && !loading) {
+      handleOpenOffboarding();
+      // Clear the action param after opening
+      setSearchParams({});
+    }
+  }, [searchParams, loading]);
 
   const loadData = async () => {
     const [emps, allAllocs] = await Promise.all([

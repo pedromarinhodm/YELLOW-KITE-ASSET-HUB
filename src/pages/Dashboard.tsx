@@ -144,7 +144,7 @@ export default function Dashboard() {
             className="gap-2"
           >
             <UserPlus className="w-4 h-4" />
-            Iniciar Onboarding
+            Onboarding
           </Button>
           <Button 
             onClick={() => navigate('/allocations?action=offboarding')}
@@ -152,7 +152,7 @@ export default function Dashboard() {
             className="gap-2"
           >
             <UserMinus className="w-4 h-4" />
-            Iniciar Offboarding
+            Offboarding
           </Button>
         </div>
       </div>
