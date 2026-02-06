@@ -134,7 +134,11 @@ export default function Dashboard() {
             <UserPlus className="w-4 h-4" />
             Onboarding
           </Button>
-          <Button onClick={() => setOffboardingModal({ open: true, employeeId: "", employeeName: "" })} variant="outline" className="gap-2">
+          <Button
+            onClick={() => setOffboardingModal({ open: true, employeeId: "", employeeName: "" })}
+            variant="outline"
+            className="gap-2"
+          >
             <UserMinus className="w-4 h-4" />
             Offboarding
           </Button>
@@ -296,7 +300,7 @@ export default function Dashboard() {
                   />
                 </>
               ) : (
-                
+                <div className="w-full bg-muted/50" />
               )}
             </div>
           </div>
@@ -345,11 +349,7 @@ export default function Dashboard() {
       </div>
 
       {/* Onboarding Modal */}
-      <OnboardingModal
-        open={onboardingOpen}
-        onOpenChange={setOnboardingOpen}
-        onSuccess={loadData}
-      />
+      <OnboardingModal open={onboardingOpen} onOpenChange={setOnboardingOpen} onSuccess={loadData} />
 
       {/* Offboarding Modal */}
       <OffboardingModal
