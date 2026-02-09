@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Plus, Search, Filter, Edit2, Trash2, Building2, Smartphone, Download } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -469,26 +470,36 @@ export default function Inventory() {
 
                 <StatusBadge status={equipment.status} />
 
-                <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleOpenDialog(equipment)}
-                    className="h-9 w-9 text-muted-foreground hover:text-foreground"
-                    title="Editar Equipamento"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setDeleteId(equipment.id)}
-                    className="h-9 w-9 text-muted-foreground hover:text-destructive"
-                    title="Deletar Equipamento"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
+                <TooltipProvider>
+                  <div className="flex gap-1">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleOpenDialog(equipment)}
+                          className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Editar Equipamento</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setDeleteId(equipment.id)}
+                          className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Deletar Equipamento</TooltipContent>
+                    </Tooltip>
+                  </div>
+                </TooltipProvider>
               </div>
             </div>
           ))
