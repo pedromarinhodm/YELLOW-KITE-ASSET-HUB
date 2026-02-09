@@ -3,7 +3,6 @@ import {
   Monitor, 
   Users, 
   ArrowRightLeft,
-  Laptop
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import {
@@ -16,6 +15,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import logoPipa from '@/assets/logo-pipa.png';
 
 const navItems = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
@@ -29,9 +29,7 @@ export function AppSidebar() {
     <Sidebar className="border-r border-border" collapsible="offcanvas">
       <SidebarHeader className="p-4 border-b border-border">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-sm">
-            <Laptop className="w-5 h-5 text-primary-foreground" />
-          </div>
+          <img src={logoPipa} alt="Yellow Kite" className="w-10 h-10 object-contain" />
           <div>
             <h1 className="text-base font-semibold text-foreground">Yellow Kite</h1>
             <p className="text-xs text-muted-foreground">Gestão de Equipamentos</p>
