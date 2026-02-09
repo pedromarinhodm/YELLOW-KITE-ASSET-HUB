@@ -56,7 +56,7 @@ export function OnboardingModal({
   const [equipmentConditions, setEquipmentConditions] = useState<Record<string, string>>({});
   const [allocationDate, setAllocationDate] = useState<Date>(new Date());
   const [movementType, setMovementType] = useState<'kit' | 'avulsa'>('kit');
-  const [environmentFilter, setEnvironmentFilter] = useState<{ station: boolean; field: boolean }>({ station: true, field: true });
+  const [environmentFilter, setEnvironmentFilter] = useState<{ station: boolean; field: boolean }>({ station: false, field: false });
   const [returnDeadline, setReturnDeadline] = useState<Date | undefined>(undefined);
 
   useEffect(() => {
@@ -126,7 +126,7 @@ export function OnboardingModal({
     setNotes('');
     setEquipmentConditions({});
     setMovementType('kit');
-    setEnvironmentFilter({ station: true, field: true });
+    setEnvironmentFilter({ station: false, field: false });
     setReturnDeadline(undefined);
     setAllocationDate(new Date());
     onOpenChange(false);
