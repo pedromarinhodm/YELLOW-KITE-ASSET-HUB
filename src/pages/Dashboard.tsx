@@ -242,7 +242,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
             {overdueReturns.map((item) => (
               <div
                 key={item.id}
