@@ -16,13 +16,24 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { CategoryIcon } from '@/components/ui/CategoryIcon';
 import { employeeService } from '@/services/employeeService';
 import { equipmentService } from '@/services/equipmentService';
 import { allocationService } from '@/services/allocationService';
-import { Employee, Equipment } from '@/types';
+import { Employee, Equipment, STATION_CATEGORIES, FIELD_CATEGORIES } from '@/types';
 import { toast } from 'sonner';
-import { UserPlus, Package } from 'lucide-react';
+import { UserPlus, Package, CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 interface OnboardingModalProps {
   open: boolean;
@@ -42,6 +53,11 @@ export function OnboardingModal({
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
+  const [equipmentConditions, setEquipmentConditions] = useState<Record<string, string>>({});
+  const [allocationDate, setAllocationDate] = useState<Date>(new Date());
+  const [movementType, setMovementType] = useState<'kit' | 'avulsa'>('kit');
+  const [environmentFilter, setEnvironmentFilter] = useState<{ station: boolean; field: boolean }>({ station: true, field: true });
+  const [returnDeadline, setReturnDeadline] = useState<Date | undefined>(undefined);
 
   useEffect(() => {
     if (open) {
@@ -82,7 +98,17 @@ export function OnboardingModal({
 
     setLoading(true);
     try {
-      await allocationService.allocate(selectedEmployee, selectedEquipments, notes);
+      const conditionNotes = selectedEquipments
+        .map(id => {
+          const eq = availableEquipments.find(e => e.id === id);
+          const cond = equipmentConditions[id];
+          return cond ? `${eq?.name}: ${cond}` : null;
+        })
+        .filter(Boolean)
+        .join('; ');
+      const finalNotes = [notes, conditionNotes].filter(Boolean).join(' | ');
+
+      await allocationService.allocate(selectedEmployee, selectedEquipments, finalNotes, allocationDate.toISOString());
       toast.success('Onboarding realizado com sucesso!');
       handleClose();
       onSuccess?.();
@@ -98,10 +124,22 @@ export function OnboardingModal({
     setSelectedEmployee('');
     setSelectedEquipments([]);
     setNotes('');
+    setEquipmentConditions({});
+    setMovementType('kit');
+    setEnvironmentFilter({ station: true, field: true });
+    setReturnDeadline(undefined);
+    setAllocationDate(new Date());
     onOpenChange(false);
   };
 
-  const totalValue = availableEquipments
+  const filteredEquipments = availableEquipments.filter(eq => {
+    if (environmentFilter.station && environmentFilter.field) return true;
+    if (environmentFilter.station) return STATION_CATEGORIES.includes(eq.category);
+    if (environmentFilter.field) return FIELD_CATEGORIES.includes(eq.category);
+    return false;
+  });
+
+  const totalValue = filteredEquipments
     .filter(e => selectedEquipments.includes(e.id))
     .reduce((sum, e) => sum + (e.purchaseValue || 0), 0);
 
@@ -139,32 +177,160 @@ export function OnboardingModal({
                 </Select>
               </div>
 
+              {/* Tipo de Movimentação */}
+              <div className="space-y-3">
+                <Label>Tipo de Movimentação</Label>
+                <RadioGroup
+                  value={movementType}
+                  onValueChange={(val: 'kit' | 'avulsa') => {
+                    setMovementType(val);
+                    setReturnDeadline(undefined);
+                  }}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center gap-2 p-3 rounded-lg border cursor-pointer hover:bg-muted transition-colors flex-1"
+                    onClick={() => { setMovementType('kit'); setReturnDeadline(undefined); }}>
+                    <RadioGroupItem value="kit" id="modal-mov-kit" />
+                    <Label htmlFor="modal-mov-kit" className="cursor-pointer text-sm font-medium">
+                      Entrega de Kit
+                      <span className="block text-xs text-muted-foreground font-normal">Novo colaborador</span>
+                    </Label>
+                  </div>
+                  <div className="flex items-center gap-2 p-3 rounded-lg border cursor-pointer hover:bg-muted transition-colors flex-1"
+                    onClick={() => setMovementType('avulsa')}>
+                    <RadioGroupItem value="avulsa" id="modal-mov-avulsa" />
+                    <Label htmlFor="modal-mov-avulsa" className="cursor-pointer text-sm font-medium">
+                      Alocação Avulsa
+                      <span className="block text-xs text-muted-foreground font-normal">Entrega extra ou substituição</span>
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {/* Ambiente do Equipamento */}
+              <div className="space-y-3">
+                <Label>Ambiente do Equipamento</Label>
+                <div className="flex gap-4">
+                  <div
+                    className="flex items-center gap-2 p-3 rounded-lg border cursor-pointer hover:bg-muted transition-colors flex-1"
+                    onClick={() => setEnvironmentFilter(prev => ({ ...prev, station: !prev.station }))}
+                  >
+                    <Checkbox checked={environmentFilter.station} />
+                    <span className="text-sm font-medium">Setup de Mesa</span>
+                  </div>
+                  <div
+                    className="flex items-center gap-2 p-3 rounded-lg border cursor-pointer hover:bg-muted transition-colors flex-1"
+                    onClick={() => setEnvironmentFilter(prev => ({ ...prev, field: !prev.field }))}
+                  >
+                    <Checkbox checked={environmentFilter.field} />
+                    <span className="text-sm font-medium">Externas</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dates */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Data de Alocação</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start text-left font-normal">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {format(allocationDate, "dd/MM/yyyy", { locale: ptBR })}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={allocationDate}
+                        onSelect={(d) => d && setAllocationDate(d)}
+                        initialFocus
+                        locale={ptBR}
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {movementType === 'avulsa' && (
+                  <div className="space-y-2">
+                    <Label>Prazo de Devolução</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !returnDeadline && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {returnDeadline ? format(returnDeadline, "dd/MM/yyyy", { locale: ptBR }) : "Selecionar prazo"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={returnDeadline}
+                          onSelect={setReturnDeadline}
+                          initialFocus
+                          locale={ptBR}
+                          disabled={(date) => date < new Date()}
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                )}
+              </div>
+
               {/* Equipment List */}
               <div className="space-y-2">
                 <Label>Equipamentos Disponíveis</Label>
                 <div className="max-h-[200px] overflow-y-auto border rounded-xl p-2 space-y-2">
-                  {availableEquipments.length > 0 ? (
-                    availableEquipments.map(eq => (
-                      <div
-                        key={eq.id}
-                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
-                        onClick={() => handleToggleEquipment(eq.id)}
-                      >
-                        <Checkbox checked={selectedEquipments.includes(eq.id)} />
-                        <CategoryIcon category={eq.category} className="w-5 h-5 text-muted-foreground" />
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">{eq.name}</p>
-                          <p className="text-xs text-muted-foreground">{eq.serialNumber}</p>
+                  {filteredEquipments.length > 0 ? (
+                    filteredEquipments.map(eq => (
+                      <div key={eq.id} className="space-y-2">
+                        <div
+                          className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
+                          onClick={() => handleToggleEquipment(eq.id)}
+                        >
+                          <Checkbox checked={selectedEquipments.includes(eq.id)} />
+                          <CategoryIcon category={eq.category} className="w-5 h-5 text-muted-foreground" />
+                          <div className="flex-1">
+                            <p className="font-medium text-sm">{eq.name}</p>
+                            <p className="text-xs text-muted-foreground">{eq.serialNumber}</p>
+                          </div>
+                          <span className="text-sm font-medium">
+                            R$ {eq.purchaseValue.toLocaleString('pt-BR')}
+                          </span>
                         </div>
-                        <span className="text-sm font-medium">
-                          R$ {eq.purchaseValue.toLocaleString('pt-BR')}
-                        </span>
+                        {selectedEquipments.includes(eq.id) && (
+                          <div className="pl-10 pr-3 pb-2">
+                            <Input
+                              placeholder="Estado de entrega (ex: Notebook com detalhe na carcaça)"
+                              value={equipmentConditions[eq.id] || ''}
+                              onChange={e =>
+                                setEquipmentConditions(prev => ({
+                                  ...prev,
+                                  [eq.id]: e.target.value,
+                                }))
+                              }
+                              className="text-xs h-8"
+                              onClick={e => e.stopPropagation()}
+                            />
+                          </div>
+                        )}
                       </div>
                     ))
                   ) : (
                     <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
                       <Package className="w-8 h-8 mb-2" />
-                      <p className="text-sm">Nenhum equipamento disponível</p>
+                      <p className="text-sm">
+                        {!environmentFilter.station && !environmentFilter.field
+                          ? 'Selecione ao menos um ambiente'
+                          : 'Nenhum equipamento disponível'}
+                      </p>
                     </div>
                   )}
                 </div>
