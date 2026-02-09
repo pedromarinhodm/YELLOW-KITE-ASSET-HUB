@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Plus, Search, Edit2, Trash2, Mail, Building, Monitor } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -278,32 +279,49 @@ export default function Employees() {
                 </div>
               </div>
 
-              <div className="flex gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleViewAllocations(employee)}
-                  className="h-9 w-9 text-muted-foreground hover:text-primary"
-                >
-                  <Monitor className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleOpenDialog(employee)}
-                  className="h-9 w-9 text-muted-foreground hover:text-foreground"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setDeleteId(employee.id)}
-                  className="h-9 w-9 text-muted-foreground hover:text-destructive"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
+              <TooltipProvider delayDuration={200}>
+                <div className="flex gap-1">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleViewAllocations(employee)}
+                        className="h-9 w-9 text-muted-foreground hover:text-primary"
+                      >
+                        <Monitor className="w-4 h-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Registro de alocações</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleOpenDialog(employee)}
+                        className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Editar Colaborador</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setDeleteId(employee.id)}
+                        className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Deletar Colaborador</TooltipContent>
+                  </Tooltip>
+                </div>
+              </TooltipProvider>
             </div>
           ))
         ) : (
