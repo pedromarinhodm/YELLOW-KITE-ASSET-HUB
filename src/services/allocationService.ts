@@ -59,19 +59,20 @@ export const allocationService = {
     return newAllocations;
   },
 
-  deallocate: async (allocationId: string, notes?: string): Promise<Allocation | undefined> => {
+  deallocate: async (allocationId: string, notes?: string, returnedAt?: string, destination?: 'available' | 'maintenance'): Promise<Allocation | undefined> => {
     const index = allocations.findIndex(a => a.id === allocationId);
     if (index === -1) return undefined;
 
     allocations[index] = {
       ...allocations[index],
-      returnedAt: new Date().toISOString(),
+      returnedAt: returnedAt || new Date().toISOString(),
       type: 'offboarding',
       notes: notes || allocations[index].notes,
     };
 
-    // Update equipment status
-    await equipmentService.update(allocations[index].equipmentId, { status: 'available' });
+    // Update equipment status based on destination
+    const newStatus = destination || 'available';
+    await equipmentService.update(allocations[index].equipmentId, { status: newStatus });
 
     return allocations[index];
   },

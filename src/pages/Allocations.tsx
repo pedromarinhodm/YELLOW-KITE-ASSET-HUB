@@ -63,6 +63,9 @@ export default function Allocations() {
   const [activeAllocations, setActiveAllocations] = useState<AllocationWithDetails[]>([]);
   const [selectedAllocations, setSelectedAllocations] = useState<string[]>([]);
   const [offboardingNotes, setOffboardingNotes] = useState('');
+  const [returnConditions, setReturnConditions] = useState<Record<string, string>>({});
+  const [returnDestinations, setReturnDestinations] = useState<Record<string, 'available' | 'maintenance'>>({});
+  const [returnDate, setReturnDate] = useState<Date>(new Date());
 
   // Term preview
   const [termPreview, setTermPreview] = useState<string>('');
@@ -154,12 +157,17 @@ export default function Allocations() {
     setSelectedAllocations([]);
     setActiveAllocations([]);
     setOffboardingNotes('');
+    setReturnConditions({});
+    setReturnDestinations({});
+    setReturnDate(new Date());
     setIsOffboardingOpen(true);
   };
 
   const handleEmployeeSelectOffboarding = async (employeeId: string) => {
     setSelectedEmployee(employeeId);
     setSelectedAllocations([]);
+    setReturnConditions({});
+    setReturnDestinations({});
     await loadActiveAllocations(employeeId);
   };
 
@@ -178,7 +186,11 @@ export default function Allocations() {
     }
 
     for (const allocationId of selectedAllocations) {
-      await allocationService.deallocate(allocationId, offboardingNotes);
+      const alloc = activeAllocations.find(a => a.id === allocationId);
+      const condition = returnConditions[allocationId] || '';
+      const destination = returnDestinations[allocationId] || 'available';
+      const notes = [offboardingNotes, condition ? `Estado: ${condition}` : ''].filter(Boolean).join(' | ');
+      await allocationService.deallocate(allocationId, notes, returnDate.toISOString(), destination);
     }
     toast.success(`${selectedAllocations.length} equipamento(s) devolvido(s) com sucesso!`);
     setIsOffboardingOpen(false);
@@ -530,9 +542,9 @@ export default function Allocations() {
 
       {/* Offboarding Dialog */}
       <Dialog open={isOffboardingOpen} onOpenChange={setIsOffboardingOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[650px] max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Offboarding - Devolução</DialogTitle>
+            <DialogTitle>Offboarding - Devolução de Equipamentos</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-6 mt-4">
@@ -546,32 +558,108 @@ export default function Allocations() {
             </div>
 
             {selectedEmployee && (
-              <div className="space-y-2">
-                <Label>Equipamentos Alocados</Label>
-                <div className="max-h-[200px] overflow-y-auto border rounded-xl p-2 space-y-2">
-                  {activeAllocations.length > 0 ? (
-                    activeAllocations.map(alloc => (
-                      <div
-                        key={alloc.id}
-                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
-                        onClick={() => handleToggleAllocation(alloc.id)}
+              <>
+                <div className="space-y-2">
+                  <Label>Data de Recebimento</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal"
                       >
-                        <Checkbox checked={selectedAllocations.includes(alloc.id)} />
-                        <CategoryIcon category={alloc.equipment.category} className="w-5 h-5 text-muted-foreground" />
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">{alloc.equipment.name}</p>
-                          <p className="text-xs text-muted-foreground">{alloc.equipment.serialNumber}</p>
-                        </div>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(alloc.allocatedAt).toLocaleDateString('pt-BR')}
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-center py-4 text-muted-foreground">Nenhum equipamento alocado</p>
-                  )}
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {format(returnDate, "dd/MM/yyyy", { locale: ptBR })}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={returnDate}
+                        onSelect={(d) => d && setReturnDate(d)}
+                        initialFocus
+                        locale={ptBR}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
-              </div>
+
+                <div className="space-y-2">
+                  <Label>Conferência de Itens</Label>
+                  <div className="max-h-[300px] overflow-y-auto border rounded-xl p-2 space-y-2">
+                    {activeAllocations.length > 0 ? (
+                      activeAllocations.map(alloc => (
+                        <div key={alloc.id} className="space-y-2">
+                          <div
+                            className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
+                            onClick={() => handleToggleAllocation(alloc.id)}
+                          >
+                            <Checkbox checked={selectedAllocations.includes(alloc.id)} />
+                            <CategoryIcon category={alloc.equipment.category} className="w-5 h-5 text-muted-foreground" />
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">{alloc.equipment.name}</p>
+                              <p className="text-xs text-muted-foreground">{alloc.equipment.serialNumber}</p>
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(alloc.allocatedAt).toLocaleDateString('pt-BR')}
+                            </span>
+                          </div>
+                          {selectedAllocations.includes(alloc.id) && (
+                            <div className="pl-10 pr-3 pb-2 space-y-2">
+                              <Input
+                                placeholder="Estado de devolução (ex: Perfeitas condições, Tela com risco)"
+                                value={returnConditions[alloc.id] || ''}
+                                onChange={e =>
+                                  setReturnConditions(prev => ({
+                                    ...prev,
+                                    [alloc.id]: e.target.value,
+                                  }))
+                                }
+                                className="text-xs h-8"
+                                onClick={e => e.stopPropagation()}
+                              />
+                              <Select
+                                value={returnDestinations[alloc.id] || 'available'}
+                                onValueChange={(val: 'available' | 'maintenance') =>
+                                  setReturnDestinations(prev => ({
+                                    ...prev,
+                                    [alloc.id]: val,
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="h-8 text-xs" onClick={e => e.stopPropagation()}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="available">Devolver ao Estoque (Disponível)</SelectItem>
+                                  <SelectItem value="maintenance">Enviar para Manutenção</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-center py-4 text-muted-foreground">Nenhum equipamento alocado</p>
+                    )}
+                  </div>
+                </div>
+
+                {selectedAllocations.length > 0 && (
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20">
+                    <span className="text-sm text-muted-foreground">
+                      {selectedAllocations.length} item(s) conferido(s)
+                    </span>
+                    <div className="flex gap-3 text-xs">
+                      <span className="text-muted-foreground">
+                        {selectedAllocations.filter(id => (returnDestinations[id] || 'available') === 'available').length} → Estoque
+                      </span>
+                      <span className="text-muted-foreground">
+                        {selectedAllocations.filter(id => returnDestinations[id] === 'maintenance').length} → Manutenção
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
             <div className="space-y-2">
@@ -579,7 +667,7 @@ export default function Allocations() {
               <Textarea
                 value={offboardingNotes}
                 onChange={e => setOffboardingNotes(e.target.value)}
-                placeholder="Ex: Equipamentos em bom estado"
+                placeholder="Ex: Colaborador desligado, equipamentos conferidos"
               />
             </div>
 
