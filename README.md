@@ -4,7 +4,7 @@ Sistema web interno para gerenciamento de equipamentos de TI, substituindo contr
 
 ## 🎯 Objetivo
 
-MVP de sistema de gestão de equipamentos para a agência Yellow Kite, atendendo 47 colaboradores. Interface web responsiva com visual limpo, minimalista e profissional.
+MVP de sistema de gestão de equipamentos para a agência Yellow Kite, atendendo 47 colaboradores. Interface web responsiva com visual limpo, minimalista e profissional. Usuário principal: RH.
 
 ## 🛠️ Stack Tecnológico
 
@@ -21,53 +21,45 @@ MVP de sistema de gestão de equipamentos para a agência Yellow Kite, atendendo
 src/
 ├── components/
 │   ├── layout/
-│   │   ├── AppSidebar.tsx      # Sidebar de navegação
-│   │   └── MainLayout.tsx      # Layout principal com sidebar
-│   ├── ui/                     # Componentes shadcn/ui
-│   │   ├── button.tsx
-│   │   ├── card.tsx
-│   │   ├── dialog.tsx
-│   │   ├── select.tsx
-│   │   └── ...
-│   ├── CategoryIcon.tsx        # Ícones por categoria
-│   ├── NavLink.tsx             # Links de navegação
-│   └── StatusBadge.tsx         # Badges de status
+│   │   ├── AppSidebar.tsx          # Sidebar de navegação
+│   │   └── MainLayout.tsx          # Layout principal com sidebar
+│   ├── ui/                         # Componentes shadcn/ui
+│   ├── EmployeeCombobox.tsx        # Combobox com busca textual de colaboradores
+│   ├── EmployeeDetailDialog.tsx    # Dialog de detalhes do colaborador
+│   ├── NavLink.tsx                 # Links de navegação
+│   ├── OnboardingModal.tsx         # Modal de onboarding (entrega)
+│   ├── OffboardingModal.tsx        # Modal de offboarding (devolução)
+│   ├── CategoryIcon.tsx            # Ícones por categoria
+│   └── StatusBadge.tsx             # Badges de status
 ├── hooks/
-│   ├── use-mobile.tsx          # Hook para detecção mobile
-│   └── use-toast.ts            # Hook para notificações
-├── integrations/
-│   └── supabase/
-│       └── placeholder.ts      # Placeholder para integração futura
-├── lib/
-│   └── utils.ts                # Utilitários (cn, etc)
+│   ├── use-mobile.tsx              # Hook para detecção mobile
+│   └── use-toast.ts                # Hook para notificações
 ├── mock/
-│   └── db.ts                   # Dados mock para desenvolvimento
+│   └── db.ts                       # Dados mock para desenvolvimento
 ├── pages/
-│   ├── Allocations.tsx         # Página de alocações
-│   ├── Dashboard.tsx           # Página inicial com métricas
-│   ├── Employees.tsx           # Gestão de colaboradores
-│   ├── Index.tsx               # Landing page
-│   ├── Inventory.tsx           # Inventário de equipamentos
-│   └── NotFound.tsx            # Página 404
+│   ├── Allocations.tsx             # Página de alocações (onboarding/offboarding)
+│   ├── Dashboard.tsx               # Página inicial com métricas
+│   ├── Employees.tsx               # Gestão de colaboradores
+│   ├── Index.tsx                    # Landing page
+│   ├── Inventory.tsx               # Inventário de equipamentos
+│   └── NotFound.tsx                # Página 404
 ├── services/
-│   ├── allocationService.ts    # Serviço de alocações
-│   ├── employeeService.ts      # Serviço de colaboradores
-│   └── equipmentService.ts     # Serviço de equipamentos
+│   ├── allocationService.ts        # Serviço de alocações, termos e histórico
+│   ├── employeeService.ts          # Serviço de colaboradores
+│   └── equipmentService.ts         # Serviço de equipamentos
 ├── types/
-│   └── index.ts                # Tipos TypeScript
-├── App.tsx                     # Componente raiz com rotas
-├── App.css                     # Estilos globais
-├── index.css                   # Design system e tokens
-└── main.tsx                    # Entry point
+│   └── index.ts                    # Tipos TypeScript
+├── App.tsx                         # Componente raiz com rotas
+├── index.css                       # Design system e tokens
+└── main.tsx                        # Entry point
 ```
 
 ## 📦 Módulos
 
 ### 1. Dashboard
-- Total de ativos
-- Valor total investido
+- Total de ativos e valor investido
 - Distribuição por status (Disponível, Alocado, Manutenção)
-- Visão geral rápida
+- Visão geral rápida com métricas
 
 ### 2. Inventário
 - CRUD completo de equipamentos
@@ -83,10 +75,27 @@ src/
 - Filtros por departamento e busca
 
 ### 4. Alocações
-- Fluxo de Onboarding (entrega de equipamentos)
-- Fluxo de Offboarding (devolução)
-- Histórico de movimentações
-- Geração de Termo de Responsabilidade
+
+#### Onboarding (Entrega de Equipamentos)
+- Busca de colaborador por nome (combobox com digitação)
+- Seleção múltipla de equipamentos com status "Disponível"
+- Campo de estado de entrega individual por item (ex: "Notebook com detalhe na carcaça")
+- Seletor de data de alocação (padrão: data atual)
+- Geração de **Termo de Responsabilidade** com lista de IDs e descrições dos ativos
+- Ação automática: status dos itens alterado de "Disponível" para "Alocado"
+
+#### Offboarding (Devolução de Equipamentos)
+- Busca de colaborador por nome (combobox com digitação)
+- Listagem automática dos equipamentos sob posse do colaborador
+- Checklist de devolução (confirmação de recebimento físico por item)
+- Campo de estado de devolução individual (condições do equipamento)
+- Destino pós-devolução: "Disponível" (estoque) ou "Manutenção"
+- Seletor de data de recebimento (padrão: data atual)
+- Geração de **Termo de Devolução** com estado de cada item
+- Ação automática: vínculo do colaborador limpo e entrada no histórico gerada
+
+#### Histórico
+- Registro completo de todas as movimentações (entregas e devoluções)
 
 ## 🎨 Design System
 
@@ -111,10 +120,10 @@ npm run build
 
 ## 📋 Próximos Passos
 
-- [ ] Integração com Lovable Cloud (Supabase) para persistência
+- [ ] Integração com Lovable Cloud para persistência de dados
 - [ ] Autenticação de usuários (RH)
 - [ ] Upload de imagens de equipamentos
-- [ ] Relatórios e exportação de dados
+- [ ] Relatórios e exportação de dados (PDF)
 - [ ] Notificações de manutenção
 
 ## 📄 Licença
