@@ -14,7 +14,132 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      allocations: {
+        Row: {
+          allocated_at: string
+          created_at: string
+          employee_id: string
+          equipment_id: string
+          id: string
+          notes: string | null
+          returned_at: string | null
+          term_signed: boolean | null
+          term_signed_at: string | null
+          type: string
+        }
+        Insert: {
+          allocated_at?: string
+          created_at?: string
+          employee_id: string
+          equipment_id: string
+          id?: string
+          notes?: string | null
+          returned_at?: string | null
+          term_signed?: boolean | null
+          term_signed_at?: string | null
+          type: string
+        }
+        Update: {
+          allocated_at?: string
+          created_at?: string
+          employee_id?: string
+          equipment_id?: string
+          id?: string
+          notes?: string | null
+          returned_at?: string | null
+          term_signed?: boolean | null
+          term_signed_at?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "allocations_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "allocations_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          created_at: string
+          department: string
+          email: string
+          id: string
+          name: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          department: string
+          email: string
+          id?: string
+          name: string
+          role: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          department?: string
+          email?: string
+          id?: string
+          name?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      equipments: {
+        Row: {
+          category: string
+          classification: string
+          created_at: string
+          id: string
+          image_url: string | null
+          name: string
+          purchase_date: string
+          purchase_value: number
+          serial_number: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          classification: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name: string
+          purchase_date: string
+          purchase_value: number
+          serial_number: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          classification?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          purchase_date?: string
+          purchase_value?: number
+          serial_number?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
