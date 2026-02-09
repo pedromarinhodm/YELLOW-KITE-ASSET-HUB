@@ -19,9 +19,10 @@ import { Label } from '@/components/ui/label';
 import { CategoryIcon } from '@/components/ui/CategoryIcon';
 import { employeeService } from '@/services/employeeService';
 import { allocationService } from '@/services/allocationService';
+import { webhookService, TermEmailPayload } from '@/services/webhookService';
 import { Employee, AllocationWithDetails } from '@/types';
 import { toast } from 'sonner';
-import { UserMinus, Package } from 'lucide-react';
+import { UserMinus, Package, FileText, Mail } from 'lucide-react';
 
 interface OffboardingModalProps {
   open: boolean;
@@ -46,6 +47,12 @@ export function OffboardingModal({
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
+
+  // Term preview
+  const [termPreview, setTermPreview] = useState('');
+  const [isTermOpen, setIsTermOpen] = useState(false);
+  const [termEmailPayload, setTermEmailPayload] = useState<TermEmailPayload | null>(null);
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -79,7 +86,6 @@ export function OffboardingModal({
     try {
       const actives = await allocationService.getActiveByEmployee(empId);
       setActiveAllocations(actives);
-      // Pre-select all allocations
       setSelectedAllocations(actives.map(a => a.id));
     } catch (error) {
       console.error('Error loading allocations:', error);
@@ -124,8 +130,40 @@ export function OffboardingModal({
       for (const allocationId of selectedAllocations) {
         await allocationService.deallocate(allocationId, notes);
       }
+
+      // Generate return term
+      const emp = employees.find(e => e.id === selectedEmployeeId);
+      if (emp) {
+        const returnedEquipments = selectedAllocations
+          .map(id => activeAllocations.find(a => a.id === id))
+          .filter(Boolean)
+          .map(a => ({
+            name: a!.equipment.name,
+            serialNumber: a!.equipment.serialNumber,
+            purchaseValue: a!.equipment.purchaseValue,
+          }));
+
+        const term = allocationService.generateReturnTerm(
+          { name: emp.name, role: emp.role, email: emp.email },
+          returnedEquipments,
+          new Date().toISOString(),
+          {},
+          activeAllocations
+        );
+
+        setTermPreview(term);
+        setTermEmailPayload({
+          type: 'offboarding',
+          employee: { name: emp.name, email: emp.email, role: emp.role, department: emp.department },
+          equipments: returnedEquipments,
+          term,
+          date: new Date().toISOString(),
+          totalValue: returnedEquipments.reduce((sum, e) => sum + e.purchaseValue, 0),
+        });
+        setIsTermOpen(true);
+      }
+
       toast.success(`${selectedAllocations.length} equipamento(s) devolvido(s) com sucesso!`);
-      onOpenChange(false);
       onSuccess?.();
     } catch (error) {
       console.error('Error during offboarding:', error);
@@ -141,6 +179,9 @@ export function OffboardingModal({
     setSelectedAllocations([]);
     setActiveAllocations([]);
     setNotes('');
+    setTermPreview('');
+    setTermEmailPayload(null);
+    setIsTermOpen(false);
     onOpenChange(false);
   };
 
@@ -149,6 +190,66 @@ export function OffboardingModal({
     .reduce((sum, a) => sum + (a.equipment?.purchaseValue || 0), 0);
 
   const showEmployeeSelector = !initialEmployeeId;
+
+  // Term preview sub-dialog
+  if (isTermOpen) {
+    return (
+      <Dialog open={isTermOpen} onOpenChange={(open) => { setIsTermOpen(open); if (!open) handleClose(); }}>
+        <DialogContent className="sm:max-w-[700px] max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              Termo de Devolução
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            {termEmailPayload && (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border mb-4 text-sm">
+                <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
+                <span className="text-muted-foreground">
+                  Enviar para: <strong className="text-foreground">{termEmailPayload.employee.email}</strong>
+                </span>
+              </div>
+            )}
+            <pre className="bg-muted p-4 rounded-xl text-xs font-mono whitespace-pre-wrap overflow-auto max-h-[350px]">
+              {termPreview}
+            </pre>
+            <div className="flex justify-end gap-3 mt-4">
+              <Button variant="outline" onClick={() => { setIsTermOpen(false); handleClose(); }}>
+                Fechar
+              </Button>
+              <Button variant="outline" onClick={() => {
+                navigator.clipboard.writeText(termPreview);
+                toast.success('Termo copiado!');
+              }}>
+                Copiar Termo
+              </Button>
+              <Button
+                className="gap-2"
+                disabled={sendingEmail || !termEmailPayload}
+                onClick={async () => {
+                  if (!termEmailPayload) return;
+                  setSendingEmail(true);
+                  try {
+                    await webhookService.sendTermByEmail(termEmailPayload);
+                    toast.success(`Termo enviado para ${termEmailPayload.employee.email}!`);
+                  } catch (error: any) {
+                    console.error('Error sending term:', error);
+                    toast.error(error.message || 'Erro ao enviar termo por email');
+                  } finally {
+                    setSendingEmail(false);
+                  }
+                }}
+              >
+                <Mail className="w-4 h-4" />
+                {sendingEmail ? 'Enviando...' : 'Enviar por Email'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
