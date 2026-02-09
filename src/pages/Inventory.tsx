@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Plus, Search, Filter, Edit2, Trash2, Building2, Smartphone } from "lucide-react";
+import { Plus, Search, Filter, Edit2, Trash2, Building2, Smartphone, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,6 +31,8 @@ import {
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { exportService } from "@/services/exportService";
+import { CATEGORY_LABELS as CAT_LABELS_EXPORT, STATUS_LABELS as STATUS_LABELS_EXPORT, CLASSIFICATION_LABELS as CLASS_LABELS_EXPORT } from "@/types";
 
 const allCategories: EquipmentCategory[] = [...STATION_CATEGORIES, ...FIELD_CATEGORIES];
 const statuses: EquipmentStatus[] = ["available", "allocated", "maintenance", "reserved"];
@@ -186,13 +189,53 @@ export default function Inventory() {
           <p className="text-muted-foreground">Gerenciamento dos equipamentos de setup de mesa e externas</p>
         </div>
 
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => handleOpenDialog()} className="gap-2">
-              <Plus className="w-4 h-4" />
-              Novo Equipamento
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-3">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Download className="w-4 h-4" />
+                Exportar
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => {
+                const data = exportService.formatInventoryData(
+                  filteredEquipments.map(e => ({
+                    ...e,
+                    category: CAT_LABELS_EXPORT[e.category],
+                    classification: CLASS_LABELS_EXPORT[e.classification],
+                    status: STATUS_LABELS_EXPORT[e.status],
+                  }))
+                );
+                exportService.exportData(data, { filename: 'inventario', format: 'xlsx', sheetName: 'Inventário' });
+                toast.success('Relatório Excel exportado!');
+              }}>
+                Exportar Excel (.xlsx)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                const data = exportService.formatInventoryData(
+                  filteredEquipments.map(e => ({
+                    ...e,
+                    category: CAT_LABELS_EXPORT[e.category],
+                    classification: CLASS_LABELS_EXPORT[e.classification],
+                    status: STATUS_LABELS_EXPORT[e.status],
+                  }))
+                );
+                exportService.exportData(data, { filename: 'inventario', format: 'csv', sheetName: 'Inventário' });
+                toast.success('Relatório CSV exportado!');
+              }}>
+                Exportar CSV (.csv)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => handleOpenDialog()} className="gap-2">
+                <Plus className="w-4 h-4" />
+                Novo Equipamento
+              </Button>
+            </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>{editingEquipment ? "Editar Equipamento" : "Cadastrar Novo Equipamento"}</DialogTitle>
@@ -308,6 +351,7 @@ export default function Inventory() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Classification Stats */}
