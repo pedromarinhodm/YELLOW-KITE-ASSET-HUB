@@ -16,11 +16,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { employeeService } from "@/services/employeeService";
-import { allocationService } from "@/services/allocationService";
-import { Employee, AllocationWithDetails, FIELD_CATEGORIES } from "@/types";
+import { Employee } from "@/types";
 import { toast } from "sonner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Tent } from "lucide-react";
+import EmployeeDetailDialog from "@/components/EmployeeDetailDialog";
 
 export default function Employees() {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -31,7 +29,6 @@ export default function Employees() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  const [employeeAllocations, setEmployeeAllocations] = useState<AllocationWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [formData, setFormData] = useState({
@@ -120,9 +117,7 @@ export default function Employees() {
     }
   };
 
-  const handleViewAllocations = async (employee: Employee) => {
-    const allocations = await allocationService.getActiveByEmployee(employee.id);
-    setEmployeeAllocations(allocations);
+  const handleViewAllocations = (employee: Employee) => {
     setSelectedEmployee(employee);
   };
 
@@ -318,94 +313,11 @@ export default function Employees() {
         )}
       </div>
 
-      {/* Employee Allocations Dialog */}
-      <Dialog open={!!selectedEmployee} onOpenChange={() => setSelectedEmployee(null)}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Equipamentos de {selectedEmployee?.name}</DialogTitle>
-          </DialogHeader>
-          <div className="mt-4">
-            {employeeAllocations.length > 0 ? (
-              selectedEmployee?.department === "Audio Visual" ? (
-                <Tabs defaultValue="setup" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 mb-4">
-                    <TabsTrigger value="setup" className="gap-2">
-                      <Building2 className="w-4 h-4" />
-                      Setup de Mesa
-                    </TabsTrigger>
-                    <TabsTrigger value="externas" className="gap-2">
-                      <Tent className="w-4 h-4" />
-                      Externas
-                    </TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="setup" className="space-y-3">
-                    {employeeAllocations.filter((a) => a.equipment.classification === "station").length > 0 ? (
-                      employeeAllocations
-                        .filter((a) => a.equipment.classification === "station")
-                        .map((allocation) => (
-                          <div
-                            key={allocation.id}
-                            className="flex items-center justify-between p-4 rounded-xl bg-muted"
-                          >
-                            <div>
-                              <p className="font-medium">{allocation.equipment.name}</p>
-                              <p className="text-sm text-muted-foreground">{allocation.equipment.serialNumber}</p>
-                            </div>
-                            <span className="text-xs text-muted-foreground">
-                              Desde {new Date(allocation.allocatedAt).toLocaleDateString("pt-BR")}
-                            </span>
-                          </div>
-                        ))
-                    ) : (
-                      <p className="text-center text-muted-foreground py-8">
-                        Nenhum equipamento de setup de mesa alocado
-                      </p>
-                    )}
-                  </TabsContent>
-                  <TabsContent value="externas" className="space-y-3">
-                    {employeeAllocations.filter((a) => a.equipment.classification === "field").length > 0 ? (
-                      employeeAllocations
-                        .filter((a) => a.equipment.classification === "field")
-                        .map((allocation) => (
-                          <div
-                            key={allocation.id}
-                            className="flex items-center justify-between p-4 rounded-xl bg-amber-500/10 border border-amber-500/20"
-                          >
-                            <div>
-                              <p className="font-medium">{allocation.equipment.name}</p>
-                              <p className="text-sm text-muted-foreground">{allocation.equipment.serialNumber}</p>
-                            </div>
-                            <span className="text-xs text-muted-foreground">
-                              Desde {new Date(allocation.allocatedAt).toLocaleDateString("pt-BR")}
-                            </span>
-                          </div>
-                        ))
-                    ) : (
-                      <p className="text-center text-muted-foreground py-8">Nenhum equipamento de externas alocado</p>
-                    )}
-                  </TabsContent>
-                </Tabs>
-              ) : (
-                <div className="space-y-3">
-                  {employeeAllocations.map((allocation) => (
-                    <div key={allocation.id} className="flex items-center justify-between p-4 rounded-xl bg-muted">
-                      <div>
-                        <p className="font-medium">{allocation.equipment.name}</p>
-                        <p className="text-sm text-muted-foreground">{allocation.equipment.serialNumber}</p>
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        Desde {new Date(allocation.allocatedAt).toLocaleDateString("pt-BR")}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )
-            ) : (
-              <p className="text-center text-muted-foreground py-8">Nenhum equipamento alocado</p>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Employee Detail Dialog */}
+      <EmployeeDetailDialog
+        employee={selectedEmployee}
+        onClose={() => setSelectedEmployee(null)}
+      />
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>

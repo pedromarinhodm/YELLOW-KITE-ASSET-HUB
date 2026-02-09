@@ -177,6 +177,7 @@ export const mockEmployees: Employee[] = [
 ];
 
 export const mockAllocations: Allocation[] = [
+  // Ana Silva - Setup de Mesa (ativos)
   {
     id: '1',
     employeeId: '1',
@@ -184,6 +185,8 @@ export const mockAllocations: Allocation[] = [
     allocatedAt: '2024-01-16T10:00:00Z',
     type: 'onboarding',
     notes: 'Kit inicial de trabalho',
+    termSigned: true,
+    termSignedAt: '2024-01-16T11:00:00Z',
   },
   {
     id: '2',
@@ -192,7 +195,32 @@ export const mockAllocations: Allocation[] = [
     allocatedAt: '2024-01-20T10:00:00Z',
     type: 'onboarding',
     notes: 'Monitor para home office',
+    termSigned: true,
+    termSignedAt: '2024-01-20T14:00:00Z',
   },
+  // Ana Silva - Externas (ativo)
+  {
+    id: '10',
+    employeeId: '1',
+    equipmentId: '7',
+    allocatedAt: '2024-06-10T10:00:00Z',
+    type: 'onboarding',
+    notes: 'iPhone para produção de conteúdo',
+    termSigned: false,
+  },
+  // Ana Silva - Histórico devolvido
+  {
+    id: '11',
+    employeeId: '1',
+    equipmentId: '4',
+    allocatedAt: '2024-02-01T10:00:00Z',
+    returnedAt: '2024-05-15T10:00:00Z',
+    type: 'offboarding',
+    notes: 'Teclado substituído por modelo novo',
+    termSigned: true,
+    termSignedAt: '2024-02-01T11:00:00Z',
+  },
+  // Carlos Mendes - Setup de Mesa (ativo)
   {
     id: '3',
     employeeId: '2',
@@ -201,6 +229,82 @@ export const mockAllocations: Allocation[] = [
     returnedAt: '2024-01-05T10:00:00Z',
     type: 'offboarding',
     notes: 'Devolvido para manutenção',
+    termSigned: true,
+    termSignedAt: '2023-12-01T12:00:00Z',
+  },
+  {
+    id: '12',
+    employeeId: '2',
+    equipmentId: '6',
+    allocatedAt: '2024-03-01T10:00:00Z',
+    type: 'onboarding',
+    notes: 'Headset para reuniões remotas',
+    termSigned: true,
+    termSignedAt: '2024-03-01T10:30:00Z',
+  },
+  // Beatriz Costa (Audio Visual) - Setup de Mesa
+  {
+    id: '13',
+    employeeId: '3',
+    equipmentId: '2',
+    allocatedAt: '2023-04-10T10:00:00Z',
+    type: 'onboarding',
+    notes: 'Notebook para edição de vídeo',
+    termSigned: true,
+    termSignedAt: '2023-04-10T11:00:00Z',
+  },
+  // Beatriz Costa - Externas (ativos)
+  {
+    id: '14',
+    employeeId: '3',
+    equipmentId: '10',
+    allocatedAt: '2024-04-01T10:00:00Z',
+    type: 'onboarding',
+    notes: 'Câmera para gravações externas',
+    termSigned: true,
+    termSignedAt: '2024-04-01T14:00:00Z',
+  },
+  {
+    id: '15',
+    employeeId: '3',
+    equipmentId: '11',
+    allocatedAt: '2024-04-01T10:00:00Z',
+    type: 'onboarding',
+    notes: 'Microfone para gravações',
+    termSigned: false,
+  },
+  {
+    id: '16',
+    employeeId: '3',
+    equipmentId: '8',
+    allocatedAt: '2024-05-15T10:00:00Z',
+    type: 'onboarding',
+    notes: 'Tripé para produções',
+    termSigned: true,
+    termSignedAt: '2024-05-15T10:30:00Z',
+  },
+  // Beatriz Costa - Histórico devolvido
+  {
+    id: '17',
+    employeeId: '3',
+    equipmentId: '9',
+    allocatedAt: '2024-01-25T10:00:00Z',
+    returnedAt: '2024-03-20T10:00:00Z',
+    type: 'offboarding',
+    notes: 'Ring Light devolvido após evento',
+    termSigned: true,
+    termSignedAt: '2024-01-25T11:00:00Z',
+  },
+  // Rafael Oliveira - Setup de Mesa
+  {
+    id: '18',
+    employeeId: '4',
+    equipmentId: '4',
+    allocatedAt: '2024-05-20T10:00:00Z',
+    type: 'onboarding',
+    notes: 'Teclado para estação de trabalho',
+    termSigned: true,
+    termSignedAt: '2024-05-20T10:00:00Z',
   },
 ];
 

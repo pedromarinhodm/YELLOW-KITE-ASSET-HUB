@@ -65,6 +65,8 @@ export interface Allocation {
   returnedAt?: string;
   notes?: string;
   type: 'onboarding' | 'offboarding';
+  termSigned?: boolean;
+  termSignedAt?: string;
 }
 
 export interface AllocationWithDetails extends Allocation {
