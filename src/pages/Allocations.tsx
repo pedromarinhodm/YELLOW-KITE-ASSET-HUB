@@ -34,6 +34,7 @@ import { equipmentService } from '@/services/equipmentService';
 import { allocationService } from '@/services/allocationService';
 import { Employee, Equipment, AllocationWithDetails } from '@/types';
 import { CategoryIcon } from '@/components/ui/CategoryIcon';
+import { EmployeeCombobox } from '@/components/EmployeeCombobox';
 import { toast } from 'sonner';
 
 export default function Allocations() {
@@ -54,6 +55,8 @@ export default function Allocations() {
   const [selectedEmployee, setSelectedEmployee] = useState<string>('');
   const [selectedEquipments, setSelectedEquipments] = useState<string[]>([]);
   const [onboardingNotes, setOnboardingNotes] = useState('');
+  const [equipmentConditions, setEquipmentConditions] = useState<Record<string, string>>({});
+  const [allocationDate, setAllocationDate] = useState<Date>(new Date());
 
   // Offboarding state
   const [isOffboardingOpen, setIsOffboardingOpen] = useState(false);
@@ -95,10 +98,8 @@ export default function Allocations() {
   };
 
   const loadAvailableEquipments = async () => {
-    // Only load station equipment for allocations (fixed assignments)
     const allAvailable = await equipmentService.getByStatus('available');
-    const stationEquipments = allAvailable.filter(e => e.classification === 'station');
-    setAvailableEquipments(stationEquipments);
+    setAvailableEquipments(allAvailable);
   };
 
   const loadActiveAllocations = async (employeeId: string) => {
@@ -111,6 +112,8 @@ export default function Allocations() {
     setSelectedEmployee('');
     setSelectedEquipments([]);
     setOnboardingNotes('');
+    setEquipmentConditions({});
+    setAllocationDate(new Date());
     setIsOnboardingOpen(true);
   };
 
@@ -128,21 +131,21 @@ export default function Allocations() {
       return;
     }
 
-    await allocationService.allocate(selectedEmployee, selectedEquipments, onboardingNotes);
+    // Build notes with conditions
+    const conditionNotes = selectedEquipments
+      .map(id => {
+        const eq = availableEquipments.find(e => e.id === id);
+        const cond = equipmentConditions[id];
+        return cond ? `${eq?.name}: ${cond}` : null;
+      })
+      .filter(Boolean)
+      .join('; ');
+    const finalNotes = [onboardingNotes, conditionNotes].filter(Boolean).join(' | ');
+
+    await allocationService.allocate(selectedEmployee, selectedEquipments, finalNotes, allocationDate.toISOString());
     toast.success('Onboarding realizado com sucesso!');
     
-    // Generate term
-    const employee = employees.find(e => e.id === selectedEmployee)!;
-    const equipments = availableEquipments.filter(e => selectedEquipments.includes(e.id));
-    const term = allocationService.generateResponsibilityTerm(
-      employee,
-      equipments,
-      new Date().toISOString()
-    );
-    setTermPreview(term);
-    
     setIsOnboardingOpen(false);
-    setIsTermOpen(true);
     await loadData();
   };
 
@@ -367,7 +370,7 @@ export default function Allocations() {
                     <>
                       <p>{new Date(allocation.allocatedAt).toLocaleDateString('pt-BR')}</p>
                       <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
-                        Ativa
+                        Alocado
                       </span>
                     </>
                   )}
@@ -384,7 +387,7 @@ export default function Allocations() {
 
       {/* Onboarding Dialog */}
       <Dialog open={isOnboardingOpen} onOpenChange={setIsOnboardingOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[650px] max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Onboarding - Entrega de Equipamentos</DialogTitle>
           </DialogHeader>
@@ -392,39 +395,73 @@ export default function Allocations() {
           <div className="space-y-6 mt-4">
             <div className="space-y-2">
               <Label>Colaborador</Label>
-              <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um colaborador" />
-                </SelectTrigger>
-                <SelectContent>
-                  {employees.map(emp => (
-                    <SelectItem key={emp.id} value={emp.id}>
-                      {emp.name} - {emp.department}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <EmployeeCombobox
+                employees={employees}
+                value={selectedEmployee}
+                onValueChange={setSelectedEmployee}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Data de Alocação</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-left font-normal"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {format(allocationDate, "dd/MM/yyyy", { locale: ptBR })}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={allocationDate}
+                    onSelect={(d) => d && setAllocationDate(d)}
+                    initialFocus
+                    locale={ptBR}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="space-y-2">
               <Label>Equipamentos Disponíveis</Label>
-              <div className="max-h-[200px] overflow-y-auto border rounded-xl p-2 space-y-2">
+              <div className="max-h-[250px] overflow-y-auto border rounded-xl p-2 space-y-2">
                 {availableEquipments.length > 0 ? (
                   availableEquipments.map(eq => (
-                    <div
-                      key={eq.id}
-                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
-                      onClick={() => handleToggleEquipment(eq.id)}
-                    >
-                      <Checkbox checked={selectedEquipments.includes(eq.id)} />
-                      <CategoryIcon category={eq.category} className="w-5 h-5 text-muted-foreground" />
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">{eq.name}</p>
-                        <p className="text-xs text-muted-foreground">{eq.serialNumber}</p>
+                    <div key={eq.id} className="space-y-2">
+                      <div
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
+                        onClick={() => handleToggleEquipment(eq.id)}
+                      >
+                        <Checkbox checked={selectedEquipments.includes(eq.id)} />
+                        <CategoryIcon category={eq.category} className="w-5 h-5 text-muted-foreground" />
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{eq.name}</p>
+                          <p className="text-xs text-muted-foreground">{eq.serialNumber}</p>
+                        </div>
+                        <span className="text-sm font-medium">
+                          R$ {eq.purchaseValue.toLocaleString('pt-BR')}
+                        </span>
                       </div>
-                      <span className="text-sm font-medium">
-                        R$ {eq.purchaseValue.toLocaleString('pt-BR')}
-                      </span>
+                      {selectedEquipments.includes(eq.id) && (
+                        <div className="pl-10 pr-3 pb-2">
+                          <Input
+                            placeholder="Estado de entrega (ex: Notebook com detalhe na carcaça)"
+                            value={equipmentConditions[eq.id] || ''}
+                            onChange={e =>
+                              setEquipmentConditions(prev => ({
+                                ...prev,
+                                [eq.id]: e.target.value,
+                              }))
+                            }
+                            className="text-xs h-8"
+                            onClick={e => e.stopPropagation()}
+                          />
+                        </div>
+                      )}
                     </div>
                   ))
                 ) : (
@@ -432,6 +469,20 @@ export default function Allocations() {
                 )}
               </div>
             </div>
+
+            {selectedEquipments.length > 0 && (
+              <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20">
+                <span className="text-sm text-muted-foreground">
+                  {selectedEquipments.length} item(s) selecionado(s)
+                </span>
+                <span className="font-semibold text-primary">
+                  R$ {availableEquipments
+                    .filter(e => selectedEquipments.includes(e.id))
+                    .reduce((sum, e) => sum + e.purchaseValue, 0)
+                    .toLocaleString('pt-BR')}
+                </span>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label>Observações</Label>
@@ -445,6 +496,29 @@ export default function Allocations() {
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={() => setIsOnboardingOpen(false)}>
                 Cancelar
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (!selectedEmployee || selectedEquipments.length === 0) {
+                    toast.error('Selecione um colaborador e pelo menos um equipamento');
+                    return;
+                  }
+                  const employee = employees.find(e => e.id === selectedEmployee)!;
+                  const equipments = availableEquipments.filter(e => selectedEquipments.includes(e.id));
+                  const term = allocationService.generateResponsibilityTerm(
+                    employee,
+                    equipments,
+                    allocationDate.toISOString()
+                  );
+                  setTermPreview(term);
+                  setIsTermOpen(true);
+                }}
+                disabled={!selectedEmployee || selectedEquipments.length === 0}
+                className="gap-2"
+              >
+                <FileText className="w-4 h-4" />
+                Gerar Termo
               </Button>
               <Button onClick={handleOnboarding} disabled={!selectedEmployee || selectedEquipments.length === 0}>
                 Confirmar Entrega
@@ -464,18 +538,11 @@ export default function Allocations() {
           <div className="space-y-6 mt-4">
             <div className="space-y-2">
               <Label>Colaborador</Label>
-              <Select value={selectedEmployee} onValueChange={handleEmployeeSelectOffboarding}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um colaborador" />
-                </SelectTrigger>
-                <SelectContent>
-                  {employees.map(emp => (
-                    <SelectItem key={emp.id} value={emp.id}>
-                      {emp.name} - {emp.department}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <EmployeeCombobox
+                employees={employees}
+                value={selectedEmployee}
+                onValueChange={handleEmployeeSelectOffboarding}
+              />
             </div>
 
             {selectedEmployee && (

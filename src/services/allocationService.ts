@@ -35,7 +35,8 @@ export const allocationService = {
   allocate: async (
     employeeId: string,
     equipmentIds: string[],
-    notes?: string
+    notes?: string,
+    allocatedAt?: string
   ): Promise<Allocation[]> => {
     const newAllocations: Allocation[] = [];
 
@@ -44,7 +45,7 @@ export const allocationService = {
         id: Date.now().toString() + equipmentId,
         employeeId,
         equipmentId,
-        allocatedAt: new Date().toISOString(),
+        allocatedAt: allocatedAt || new Date().toISOString(),
         type: 'onboarding',
         notes,
       };
