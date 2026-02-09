@@ -192,6 +192,30 @@ export default function Allocations() {
       const notes = [offboardingNotes, condition ? `Estado: ${condition}` : ''].filter(Boolean).join(' | ');
       await allocationService.deallocate(allocationId, notes, returnDate.toISOString(), destination);
     }
+
+    // Generate return term
+    const emp = employees.find(e => e.id === selectedEmployee);
+    if (emp) {
+      const returnedEquipments = selectedAllocations
+        .map(id => activeAllocations.find(a => a.id === id))
+        .filter(Boolean)
+        .map(a => ({
+          name: a!.equipment.name,
+          serialNumber: a!.equipment.serialNumber,
+          purchaseValue: a!.equipment.purchaseValue,
+        }));
+
+      const term = allocationService.generateReturnTerm(
+        { name: emp.name, role: emp.role, email: emp.email },
+        returnedEquipments,
+        returnDate.toISOString(),
+        returnConditions,
+        activeAllocations
+      );
+      setTermPreview(term);
+      setIsTermOpen(true);
+    }
+
     toast.success(`${selectedAllocations.length} equipamento(s) devolvido(s) com sucesso!`);
     setIsOffboardingOpen(false);
     await loadData();

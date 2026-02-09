@@ -124,4 +124,54 @@ _________________________          _________________________
 ═══════════════════════════════════════════════════════════════
     `.trim();
   },
+
+  generateReturnTerm: (
+    employee: { name: string; role: string; email: string },
+    equipments: { name: string; serialNumber: string; purchaseValue: number }[],
+    date: string,
+    conditions: Record<string, string>,
+    allocations: { id: string; equipment: { name: string } }[]
+  ): string => {
+    const equipmentsList = equipments
+      .map((e, i) => {
+        const alloc = allocations.find(a => a.equipment.name === e.name);
+        const condition = alloc ? (conditions[alloc.id] || 'Não informado') : 'Não informado';
+        return `${i + 1}. ${e.name} - Patrimônio: ${e.serialNumber} - Valor: R$ ${e.purchaseValue.toLocaleString('pt-BR')}\n   Estado de Devolução: ${condition}`;
+      })
+      .join('\n');
+
+    const totalValue = equipments.reduce((sum, e) => sum + e.purchaseValue, 0);
+
+    return `
+═══════════════════════════════════════════════════════════════
+                    TERMO DE DEVOLUÇÃO
+                    YELLOW KITE - GESTÃO DE EQUIPAMENTOS
+═══════════════════════════════════════════════════════════════
+
+Data de Devolução: ${new Date(date).toLocaleDateString('pt-BR')}
+
+COLABORADOR:
+Nome: ${employee.name}
+Cargo: ${employee.role}
+Email: ${employee.email}
+
+EQUIPAMENTOS DEVOLVIDOS:
+${equipmentsList}
+
+VALOR TOTAL: R$ ${totalValue.toLocaleString('pt-BR')}
+
+═══════════════════════════════════════════════════════════════
+
+Declaro ter devolvido os equipamentos listados acima e que a
+empresa confirma o recebimento dos mesmos nas condições
+descritas individualmente.
+
+═══════════════════════════════════════════════════════════════
+
+_________________________          _________________________
+   Colaborador                        RH Yellow Kite
+
+═══════════════════════════════════════════════════════════════
+    `.trim();
+  },
 };
