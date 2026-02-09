@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { UserPlus, UserMinus, FileText, History, Search, CalendarIcon, X, Mail } from 'lucide-react';
+import { UserPlus, UserMinus, FileText, History, Search, CalendarIcon, X, Mail, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -38,6 +38,13 @@ import { CategoryIcon } from '@/components/ui/CategoryIcon';
 import { EmployeeCombobox } from '@/components/EmployeeCombobox';
 import { toast } from 'sonner';
 import { webhookService, TermEmailPayload } from '@/services/webhookService';
+import { exportService } from '@/services/exportService';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export default function Allocations() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -288,6 +295,30 @@ export default function Allocations() {
         </div>
 
         <div className="flex gap-3">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Download className="w-4 h-4" />
+                Exportar
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => {
+                const data = exportService.formatAllocationData(allocations as any);
+                exportService.exportData(data, { filename: 'alocacoes', format: 'xlsx', sheetName: 'Alocações' });
+                toast.success('Relatório Excel exportado!');
+              }}>
+                Exportar Excel (.xlsx)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                const data = exportService.formatAllocationData(allocations as any);
+                exportService.exportData(data, { filename: 'alocacoes', format: 'csv', sheetName: 'Alocações' });
+                toast.success('Relatório CSV exportado!');
+              }}>
+                Exportar CSV (.csv)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button onClick={handleOpenOnboarding} className="gap-2">
             <UserPlus className="w-4 h-4" />
             Onboarding
