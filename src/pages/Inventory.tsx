@@ -475,6 +475,7 @@ export default function Inventory() {
                     size="icon"
                     onClick={() => handleOpenDialog(equipment)}
                     className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                    title="Editar Equipamento"
                   >
                     <Edit2 className="w-4 h-4" />
                   </Button>
@@ -483,6 +484,7 @@ export default function Inventory() {
                     size="icon"
                     onClick={() => setDeleteId(equipment.id)}
                     className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                    title="Deletar Equipamento"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>

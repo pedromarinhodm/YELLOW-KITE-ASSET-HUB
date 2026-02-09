@@ -19,9 +19,9 @@ import logoPipa from '@/assets/logo-pipa.png';
 
 const navItems = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
+  { title: 'Alocações', url: '/allocations', icon: ArrowRightLeft },
   { title: 'Inventário', url: '/inventory', icon: Monitor },
   { title: 'Colaboradores', url: '/employees', icon: Users },
-  { title: 'Alocações', url: '/allocations', icon: ArrowRightLeft },
 ];
 
 export function AppSidebar() {

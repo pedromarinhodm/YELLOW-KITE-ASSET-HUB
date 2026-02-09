@@ -299,7 +299,7 @@ export default function Dashboard() {
       <div className="card-minimal">
         <h2 className="text-base font-semibold text-foreground mb-6">Últimas Alocações</h2>
         {recentAllocations.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
             {recentAllocations.map((allocation) => (
               <div
                 key={allocation.id}
