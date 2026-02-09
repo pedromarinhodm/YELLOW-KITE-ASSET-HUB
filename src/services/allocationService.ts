@@ -1,35 +1,80 @@
 import { Allocation, AllocationWithDetails } from '@/types';
-import { mockAllocations } from '@/mock/db';
+import { supabase } from '@/integrations/supabase/client';
 import { equipmentService } from './equipmentService';
-import { employeeService } from './employeeService';
 
-// In-memory storage (will be replaced with Supabase)
-let allocations: Allocation[] = [...mockAllocations];
+const mapRow = (row: any): Allocation => ({
+  id: row.id,
+  employeeId: row.employee_id,
+  equipmentId: row.equipment_id,
+  allocatedAt: row.allocated_at,
+  returnedAt: row.returned_at,
+  notes: row.notes,
+  type: row.type,
+  termSigned: row.term_signed,
+  termSignedAt: row.term_signed_at,
+});
+
+const mapRowWithDetails = (row: any): AllocationWithDetails => ({
+  ...mapRow(row),
+  employee: {
+    id: row.employees.id,
+    name: row.employees.name,
+    role: row.employees.role,
+    email: row.employees.email,
+    department: row.employees.department,
+    createdAt: row.employees.created_at,
+    updatedAt: row.employees.updated_at,
+  },
+  equipment: {
+    id: row.equipments.id,
+    name: row.equipments.name,
+    category: row.equipments.category,
+    classification: row.equipments.classification,
+    serialNumber: row.equipments.serial_number,
+    purchaseValue: Number(row.equipments.purchase_value),
+    purchaseDate: row.equipments.purchase_date,
+    status: row.equipments.status,
+    imageUrl: row.equipments.image_url,
+    createdAt: row.equipments.created_at,
+    updatedAt: row.equipments.updated_at,
+  },
+});
 
 export const allocationService = {
   getAll: async (): Promise<Allocation[]> => {
-    return [...allocations];
+    const { data, error } = await supabase.from('allocations').select('*').order('allocated_at', { ascending: false });
+    if (error) throw error;
+    return (data || []).map(mapRow);
   },
 
   getAllWithDetails: async (): Promise<AllocationWithDetails[]> => {
-    const employees = await employeeService.getAll();
-    const equipments = await equipmentService.getAll();
-
-    return allocations.map(allocation => ({
-      ...allocation,
-      employee: employees.find(e => e.id === allocation.employeeId)!,
-      equipment: equipments.find(e => e.id === allocation.equipmentId)!,
-    })).filter(a => a.employee && a.equipment);
+    const { data, error } = await supabase
+      .from('allocations')
+      .select('*, employees(*), equipments(*)')
+      .order('allocated_at', { ascending: false });
+    if (error) throw error;
+    return (data || []).filter(r => r.employees && r.equipments).map(mapRowWithDetails);
   },
 
   getByEmployee: async (employeeId: string): Promise<AllocationWithDetails[]> => {
-    const all = await allocationService.getAllWithDetails();
-    return all.filter(a => a.employeeId === employeeId);
+    const { data, error } = await supabase
+      .from('allocations')
+      .select('*, employees(*), equipments(*)')
+      .eq('employee_id', employeeId)
+      .order('allocated_at', { ascending: false });
+    if (error) throw error;
+    return (data || []).filter(r => r.employees && r.equipments).map(mapRowWithDetails);
   },
 
   getActiveByEmployee: async (employeeId: string): Promise<AllocationWithDetails[]> => {
-    const all = await allocationService.getByEmployee(employeeId);
-    return all.filter(a => !a.returnedAt);
+    const { data, error } = await supabase
+      .from('allocations')
+      .select('*, employees(*), equipments(*)')
+      .eq('employee_id', employeeId)
+      .is('returned_at', null)
+      .order('allocated_at', { ascending: false });
+    if (error) throw error;
+    return (data || []).filter(r => r.employees && r.equipments).map(mapRowWithDetails);
   },
 
   allocate: async (
@@ -38,43 +83,52 @@ export const allocationService = {
     notes?: string,
     allocatedAt?: string
   ): Promise<Allocation[]> => {
-    const newAllocations: Allocation[] = [];
+    const rows = equipmentIds.map(equipmentId => ({
+      employee_id: employeeId,
+      equipment_id: equipmentId,
+      allocated_at: allocatedAt || new Date().toISOString(),
+      type: 'onboarding',
+      notes,
+    }));
 
+    const { data, error } = await supabase.from('allocations').insert(rows).select();
+    if (error) throw error;
+
+    // Update equipment statuses
     for (const equipmentId of equipmentIds) {
-      const allocation: Allocation = {
-        id: Date.now().toString() + equipmentId,
-        employeeId,
-        equipmentId,
-        allocatedAt: allocatedAt || new Date().toISOString(),
-        type: 'onboarding',
-        notes,
-      };
-      allocations.push(allocation);
-      newAllocations.push(allocation);
-
-      // Update equipment status
       await equipmentService.update(equipmentId, { status: 'allocated' });
     }
 
-    return newAllocations;
+    return (data || []).map(mapRow);
   },
 
   deallocate: async (allocationId: string, notes?: string, returnedAt?: string, destination?: 'available' | 'maintenance'): Promise<Allocation | undefined> => {
-    const index = allocations.findIndex(a => a.id === allocationId);
-    if (index === -1) return undefined;
+    // First get the allocation to find equipment id
+    const { data: existing, error: fetchError } = await supabase
+      .from('allocations')
+      .select('*')
+      .eq('id', allocationId)
+      .maybeSingle();
+    if (fetchError) throw fetchError;
+    if (!existing) return undefined;
 
-    allocations[index] = {
-      ...allocations[index],
-      returnedAt: returnedAt || new Date().toISOString(),
-      type: 'offboarding',
-      notes: notes || allocations[index].notes,
-    };
+    const { data: row, error } = await supabase
+      .from('allocations')
+      .update({
+        returned_at: returnedAt || new Date().toISOString(),
+        type: 'offboarding',
+        notes: notes || existing.notes,
+      })
+      .eq('id', allocationId)
+      .select()
+      .maybeSingle();
+    if (error) throw error;
 
-    // Update equipment status based on destination
+    // Update equipment status
     const newStatus = destination || 'available';
-    await equipmentService.update(allocations[index].equipmentId, { status: newStatus });
+    await equipmentService.update(existing.equipment_id, { status: newStatus });
 
-    return allocations[index];
+    return row ? mapRow(row) : undefined;
   },
 
   generateResponsibilityTerm: (

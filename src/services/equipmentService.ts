@@ -1,86 +1,117 @@
-import { Equipment, EquipmentCategory, EquipmentStatus, EquipmentClassification, STATION_CATEGORIES, FIELD_CATEGORIES } from '@/types';
-import { mockEquipments } from '@/mock/db';
+import { Equipment, EquipmentCategory, EquipmentStatus, EquipmentClassification, FIELD_CATEGORIES } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
 
-// In-memory storage (will be replaced with Supabase)
-let equipments: Equipment[] = [...mockEquipments];
-
-// Helper to determine classification from category
 export const getClassificationFromCategory = (category: EquipmentCategory): EquipmentClassification => {
   if (FIELD_CATEGORIES.includes(category)) return 'field';
   return 'station';
 };
 
+const mapRow = (row: any): Equipment => ({
+  id: row.id,
+  name: row.name,
+  category: row.category as EquipmentCategory,
+  classification: row.classification as EquipmentClassification,
+  serialNumber: row.serial_number,
+  purchaseValue: Number(row.purchase_value),
+  purchaseDate: row.purchase_date,
+  status: row.status as EquipmentStatus,
+  imageUrl: row.image_url,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
 export const equipmentService = {
   getAll: async (): Promise<Equipment[]> => {
-    return [...equipments];
+    const { data, error } = await supabase.from('equipments').select('*').order('name');
+    if (error) throw error;
+    return (data || []).map(mapRow);
   },
 
   getById: async (id: string): Promise<Equipment | undefined> => {
-    return equipments.find(e => e.id === id);
+    const { data, error } = await supabase.from('equipments').select('*').eq('id', id).maybeSingle();
+    if (error) throw error;
+    return data ? mapRow(data) : undefined;
   },
 
   getByStatus: async (status: EquipmentStatus): Promise<Equipment[]> => {
-    return equipments.filter(e => e.status === status);
+    const { data, error } = await supabase.from('equipments').select('*').eq('status', status);
+    if (error) throw error;
+    return (data || []).map(mapRow);
   },
 
   getByCategory: async (category: EquipmentCategory): Promise<Equipment[]> => {
-    return equipments.filter(e => e.category === category);
+    const { data, error } = await supabase.from('equipments').select('*').eq('category', category);
+    if (error) throw error;
+    return (data || []).map(mapRow);
   },
 
   getByClassification: async (classification: EquipmentClassification): Promise<Equipment[]> => {
-    return equipments.filter(e => e.classification === classification);
+    const { data, error } = await supabase.from('equipments').select('*').eq('classification', classification);
+    if (error) throw error;
+    return (data || []).map(mapRow);
   },
 
   getAvailableByClassification: async (classification: EquipmentClassification): Promise<Equipment[]> => {
-    return equipments.filter(e => e.classification === classification && e.status === 'available');
+    const { data, error } = await supabase.from('equipments').select('*').eq('classification', classification).eq('status', 'available');
+    if (error) throw error;
+    return (data || []).map(mapRow);
   },
 
   create: async (data: Omit<Equipment, 'id' | 'createdAt' | 'updatedAt' | 'status'>): Promise<Equipment> => {
-    const newEquipment: Equipment = {
-      ...data,
+    const { data: row, error } = await supabase.from('equipments').insert({
+      name: data.name,
+      category: data.category,
+      classification: data.classification,
+      serial_number: data.serialNumber,
+      purchase_value: data.purchaseValue,
+      purchase_date: data.purchaseDate,
       status: 'available',
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    equipments.push(newEquipment);
-    return newEquipment;
+    }).select().single();
+    if (error) throw error;
+    return mapRow(row);
   },
 
   update: async (id: string, data: Partial<Equipment>): Promise<Equipment | undefined> => {
-    const index = equipments.findIndex(e => e.id === id);
-    if (index === -1) return undefined;
+    const updateData: any = {};
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.category !== undefined) updateData.category = data.category;
+    if (data.classification !== undefined) updateData.classification = data.classification;
+    if (data.serialNumber !== undefined) updateData.serial_number = data.serialNumber;
+    if (data.purchaseValue !== undefined) updateData.purchase_value = data.purchaseValue;
+    if (data.purchaseDate !== undefined) updateData.purchase_date = data.purchaseDate;
+    if (data.status !== undefined) updateData.status = data.status;
+    if (data.imageUrl !== undefined) updateData.image_url = data.imageUrl;
 
-    equipments[index] = {
-      ...equipments[index],
-      ...data,
-      updatedAt: new Date().toISOString(),
-    };
-    return equipments[index];
+    const { data: row, error } = await supabase.from('equipments').update(updateData).eq('id', id).select().maybeSingle();
+    if (error) throw error;
+    return row ? mapRow(row) : undefined;
   },
 
   delete: async (id: string): Promise<boolean> => {
-    const index = equipments.findIndex(e => e.id === id);
-    if (index === -1) return false;
-    equipments.splice(index, 1);
+    const { error } = await supabase.from('equipments').delete().eq('id', id);
+    if (error) throw error;
     return true;
   },
 
   getTotalValue: async (): Promise<number> => {
-    return equipments.reduce((sum, e) => sum + e.purchaseValue, 0);
+    const { data, error } = await supabase.from('equipments').select('purchase_value');
+    if (error) throw error;
+    return (data || []).reduce((sum, e) => sum + Number(e.purchase_value), 0);
   },
 
   getStats: async () => {
-    const total = equipments.length;
-    const available = equipments.filter(e => e.status === 'available').length;
-    const allocated = equipments.filter(e => e.status === 'allocated').length;
-    const maintenance = equipments.filter(e => e.status === 'maintenance').length;
-    const reserved = equipments.filter(e => e.status === 'reserved').length;
-    const totalValue = equipments.reduce((sum, e) => sum + e.purchaseValue, 0);
-    
-    const stationTotal = equipments.filter(e => e.classification === 'station').length;
-    const fieldTotal = equipments.filter(e => e.classification === 'field').length;
-
-    return { total, available, allocated, maintenance, reserved, totalValue, stationTotal, fieldTotal };
+    const { data, error } = await supabase.from('equipments').select('status, classification, purchase_value');
+    if (error) throw error;
+    const items = data || [];
+    return {
+      total: items.length,
+      available: items.filter(e => e.status === 'available').length,
+      allocated: items.filter(e => e.status === 'allocated').length,
+      maintenance: items.filter(e => e.status === 'maintenance').length,
+      reserved: items.filter(e => e.status === 'reserved').length,
+      totalValue: items.reduce((sum, e) => sum + Number(e.purchase_value), 0),
+      stationTotal: items.filter(e => e.classification === 'station').length,
+      fieldTotal: items.filter(e => e.classification === 'field').length,
+    };
   },
 };
