@@ -56,10 +56,8 @@ export function OnboardingModal({
         employeeService.getAll(),
         equipmentService.getByStatus('available'),
       ]);
-      // Only load station equipment for allocations (fixed assignments)
-      const stationEquipments = allAvailable.filter(e => e.classification === 'station');
       setEmployees(emps);
-      setAvailableEquipments(stationEquipments);
+      setAvailableEquipments(allAvailable);
     } catch (error) {
       console.error('Error loading data:', error);
       toast.error('Erro ao carregar dados');
