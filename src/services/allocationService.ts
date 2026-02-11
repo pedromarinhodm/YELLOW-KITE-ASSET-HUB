@@ -22,6 +22,7 @@ const mapRowWithDetails = (row: any): AllocationWithDetails => ({
     role: row.employees.role,
     email: row.employees.email,
     department: row.employees.department,
+    status: row.employees.status || 'Ativo',
     createdAt: row.employees.created_at,
     updatedAt: row.employees.updated_at,
   },

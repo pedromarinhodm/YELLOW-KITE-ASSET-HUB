@@ -131,6 +131,12 @@ export function OffboardingModal({
         await allocationService.deallocate(allocationId, notes);
       }
 
+      // If all allocations returned, deactivate employee
+      const allReturned = selectedAllocations.length === activeAllocations.length;
+      if (allReturned && selectedEmployeeId) {
+        await employeeService.deactivate(selectedEmployeeId, 'Desligado');
+      }
+
       // Generate return term
       const emp = employees.find(e => e.id === selectedEmployeeId);
       if (emp) {
@@ -163,7 +169,7 @@ export function OffboardingModal({
         setIsTermOpen(true);
       }
 
-      toast.success(`${selectedAllocations.length} equipamento(s) devolvido(s) com sucesso!`);
+      toast.success(`${selectedAllocations.length} equipamento(s) devolvido(s) com sucesso!${allReturned ? ' Colaborador marcado como Desligado.' : ''}`);
       onSuccess?.();
     } catch (error) {
       console.error('Error during offboarding:', error);

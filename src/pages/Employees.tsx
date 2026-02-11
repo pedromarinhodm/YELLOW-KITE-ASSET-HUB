@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Search, Edit2, Trash2, Mail, Building, Monitor } from "lucide-react";
+import { Plus, Search, Edit2, UserMinus, Mail, Building, Monitor } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -111,8 +111,8 @@ export default function Employees() {
 
   const handleDelete = async () => {
     if (deleteId) {
-      await employeeService.delete(deleteId);
-      toast.success("Colaborador removido com sucesso!");
+      await employeeService.deactivate(deleteId, 'Desligado');
+      toast.success("Colaborador marcado como Desligado!");
       await loadEmployees();
       setDeleteId(null);
     }
@@ -315,10 +315,10 @@ export default function Employees() {
                         onClick={() => setDeleteId(employee.id)}
                         className="h-9 w-9 text-muted-foreground hover:text-destructive"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <UserMinus className="w-4 h-4" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Deletar Colaborador</TooltipContent>
+                    <TooltipContent>Desligar Colaborador</TooltipContent>
                   </Tooltip>
                 </div>
               </TooltipProvider>
@@ -337,13 +337,13 @@ export default function Employees() {
         onClose={() => setSelectedEmployee(null)}
       />
 
-      {/* Delete Confirmation */}
+      {/* Deactivate Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogTitle>Confirmar Desligamento</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja remover este colaborador? Esta ação não pode ser desfeita.
+              Tem certeza que deseja marcar este colaborador como Desligado? Ele não aparecerá mais nas listagens ativas, mas seu histórico será preservado.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -352,7 +352,7 @@ export default function Employees() {
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Excluir
+              Confirmar Desligamento
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
