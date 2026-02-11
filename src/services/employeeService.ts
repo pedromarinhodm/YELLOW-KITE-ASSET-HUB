@@ -1,4 +1,4 @@
-import { Employee } from '@/types';
+import { Employee, EmployeeStatus } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 
 const mapRow = (row: any): Employee => ({
@@ -7,13 +7,19 @@ const mapRow = (row: any): Employee => ({
   role: row.role,
   email: row.email,
   department: row.department,
+  status: row.status || 'Ativo',
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
 
 export const employeeService = {
-  getAll: async (): Promise<Employee[]> => {
-    const { data, error } = await supabase.from('employees').select('*').order('name');
+  /** Returns only active employees by default */
+  getAll: async (includeInactive = false): Promise<Employee[]> => {
+    let query = supabase.from('employees').select('*').order('name');
+    if (!includeInactive) {
+      query = query.eq('status', 'Ativo');
+    }
+    const { data, error } = await query;
     if (error) throw error;
     return (data || []).map(mapRow);
   },
@@ -30,7 +36,7 @@ export const employeeService = {
     return (data || []).map(mapRow);
   },
 
-  create: async (data: Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>): Promise<Employee> => {
+  create: async (data: Omit<Employee, 'id' | 'createdAt' | 'updatedAt' | 'status'>): Promise<Employee> => {
     const { data: row, error } = await supabase.from('employees').insert({
       name: data.name,
       role: data.role,
@@ -47,8 +53,16 @@ export const employeeService = {
     if (data.role !== undefined) updateData.role = data.role;
     if (data.email !== undefined) updateData.email = data.email;
     if (data.department !== undefined) updateData.department = data.department;
+    if (data.status !== undefined) updateData.status = data.status;
 
     const { data: row, error } = await supabase.from('employees').update(updateData).eq('id', id).select().maybeSingle();
+    if (error) throw error;
+    return row ? mapRow(row) : undefined;
+  },
+
+  /** Soft-delete: sets status to Desligado */
+  deactivate: async (id: string, status: EmployeeStatus = 'Desligado'): Promise<Employee | undefined> => {
+    const { data: row, error } = await supabase.from('employees').update({ status }).eq('id', id).select().maybeSingle();
     if (error) throw error;
     return row ? mapRow(row) : undefined;
   },

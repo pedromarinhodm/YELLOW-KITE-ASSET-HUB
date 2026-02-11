@@ -47,12 +47,15 @@ export interface Equipment {
   updatedAt: string;
 }
 
+export type EmployeeStatus = 'Ativo' | 'Inativo' | 'Desligado';
+
 export interface Employee {
   id: string;
   name: string;
   role: string;
   email: string;
   department: string;
+  status: EmployeeStatus;
   createdAt: string;
   updatedAt: string;
 }

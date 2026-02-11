@@ -233,6 +233,12 @@ export default function Allocations() {
       await allocationService.deallocate(allocationId, notes, returnDate.toISOString(), destination);
     }
 
+    // Check if all allocations are being returned — if so, deactivate employee
+    const allReturned = selectedAllocations.length === activeAllocations.length;
+    if (allReturned && selectedEmployee) {
+      await employeeService.deactivate(selectedEmployee, 'Desligado');
+    }
+
     // Generate return term
     const emp = employees.find(e => e.id === selectedEmployee);
     if (emp) {
@@ -273,7 +279,7 @@ export default function Allocations() {
       setIsTermOpen(true);
     }
 
-    toast.success(`${selectedAllocations.length} equipamento(s) devolvido(s) com sucesso!`);
+    toast.success(`${selectedAllocations.length} equipamento(s) devolvido(s) com sucesso!${allReturned ? ' Colaborador marcado como Desligado.' : ''}`);
     setIsOffboardingOpen(false);
     await loadData();
   };
