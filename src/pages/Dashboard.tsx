@@ -75,27 +75,33 @@ export default function Dashboard() {
 
     setRecentAllocations(allocations.slice(-5).reverse());
 
-    // Gerar pendências a partir das alocações ativas (não devolvidas)
+    // Gerar pendências a partir das alocações ativas com prazo vencido
+    // Exclui equipamentos de "Setup de Mesa" (classification === 'station')
     const activeAllocations = allocations.filter((a) => !a.returnedAt);
     const today = new Date();
 
-    const pendencias: OverdueReturn[] = activeAllocations.map((allocation) => {
-      // Para fins de demonstração, simular uma data de vencimento recente
-      // Usando a data atual menos um período aleatório para criar atrasos realistas
-      const randomDaysOverdue = Math.floor(Math.random() * 15) + 3; // 3 a 17 dias de atraso
-      const dueDate = new Date(today);
-      dueDate.setDate(dueDate.getDate() - randomDaysOverdue);
+    const pendencias: OverdueReturn[] = activeAllocations
+      .filter((allocation) => {
+        // Excluir equipamentos de Setup de Mesa
+        if (allocation.equipment.classification === 'station') return false;
+        // Só exibir se houver prazo definido e ele já tiver vencido
+        if (!allocation.returnDeadline) return false;
+        return today > new Date(allocation.returnDeadline);
+      })
+      .map((allocation) => {
+        const dueDate = new Date(allocation.returnDeadline!);
+        const daysOverdue = Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
 
-      return {
-        id: `overdue-${allocation.id}`,
-        employeeId: allocation.employee.id,
-        employeeName: allocation.employee.name,
-        equipmentName: allocation.equipment.name,
-        dueDate: dueDate.toISOString().split("T")[0],
-        daysOverdue: randomDaysOverdue,
-        resolved: false,
-      };
-    });
+        return {
+          id: `overdue-${allocation.id}`,
+          employeeId: allocation.employee.id,
+          employeeName: allocation.employee.name,
+          equipmentName: allocation.equipment.name,
+          dueDate: allocation.returnDeadline!.split('T')[0],
+          daysOverdue,
+          resolved: false,
+        };
+      });
 
     setOverdueReturns(pendencias);
     setLoading(false);

@@ -70,6 +70,7 @@ export interface Allocation {
   type: 'onboarding' | 'offboarding';
   termSigned?: boolean;
   termSignedAt?: string;
+  returnDeadline?: string;
 }
 
 export interface AllocationWithDetails extends Allocation {

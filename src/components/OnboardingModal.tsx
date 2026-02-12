@@ -115,7 +115,7 @@ export function OnboardingModal({
         .join('; ');
       const finalNotes = [notes, conditionNotes].filter(Boolean).join(' | ');
 
-      await allocationService.allocate(selectedEmployee, selectedEquipments, finalNotes, allocationDate.toISOString());
+      await allocationService.allocate(selectedEmployee, selectedEquipments, finalNotes, allocationDate.toISOString(), returnDeadline?.toISOString());
 
       // Generate term and prepare email payload
       const employee = employees.find(e => e.id === selectedEmployee)!;
