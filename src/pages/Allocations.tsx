@@ -661,22 +661,6 @@ export default function Allocations() {
                             R$ {eq.purchaseValue.toLocaleString('pt-BR')}
                           </span>
                         </div>
-                        {selectedEquipments.includes(eq.id) && (
-                          <div className="pl-10 pr-3 pb-2">
-                            <Input
-                              placeholder="Estado de entrega (ex: Notebook com detalhe na carcaça)"
-                              value={equipmentConditions[eq.id] || ''}
-                              onChange={e =>
-                                setEquipmentConditions(prev => ({
-                                  ...prev,
-                                  [eq.id]: e.target.value,
-                                }))
-                              }
-                              className="text-xs h-8"
-                              onClick={e => e.stopPropagation()}
-                            />
-                          </div>
-                        )}
                       </div>
                     ))
                   ) : (
@@ -813,18 +797,6 @@ export default function Allocations() {
                           </div>
                           {selectedAllocations.includes(alloc.id) && (
                             <div className="pl-10 pr-3 pb-2 space-y-2">
-                              <Input
-                                placeholder="Estado de devolução (ex: Perfeitas condições, Tela com risco)"
-                                value={returnConditions[alloc.id] || ''}
-                                onChange={e =>
-                                  setReturnConditions(prev => ({
-                                    ...prev,
-                                    [alloc.id]: e.target.value,
-                                  }))
-                                }
-                                className="text-xs h-8"
-                                onClick={e => e.stopPropagation()}
-                              />
                               <Select
                                 value={returnDestinations[alloc.id] || 'available'}
                                 onValueChange={(val: 'available' | 'maintenance') =>

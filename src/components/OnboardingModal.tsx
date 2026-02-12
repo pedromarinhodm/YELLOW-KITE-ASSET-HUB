@@ -398,22 +398,6 @@ export function OnboardingModal({
                             R$ {eq.purchaseValue.toLocaleString('pt-BR')}
                           </span>
                         </div>
-                        {selectedEquipments.includes(eq.id) && (
-                          <div className="pl-10 pr-3 pb-2">
-                            <Input
-                              placeholder="Estado de entrega (ex: Notebook com detalhe na carcaça)"
-                              value={equipmentConditions[eq.id] || ''}
-                              onChange={e =>
-                                setEquipmentConditions(prev => ({
-                                  ...prev,
-                                  [eq.id]: e.target.value,
-                                }))
-                              }
-                              className="text-xs h-8"
-                              onClick={e => e.stopPropagation()}
-                            />
-                          </div>
-                        )}
                       </div>
                     ))
                   ) : (

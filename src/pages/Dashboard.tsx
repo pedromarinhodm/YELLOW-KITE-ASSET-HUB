@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Users, DollarSign, Package, AlertTriangle, UserPlus, UserMinus } from "lucide-react";
 import { equipmentService } from "@/services/equipmentService";
 import { employeeService } from "@/services/employeeService";
 import { allocationService } from "@/services/allocationService";
 import { AllocationWithDetails, OverdueReturn } from "@/types";
 import { Button } from "@/components/ui/button";
-import { OffboardingModal } from "@/components/OffboardingModal";
-import { OnboardingModal } from "@/components/OnboardingModal";
 
 interface Stats {
   totalEquipments: number;
@@ -29,34 +28,14 @@ export default function Dashboard() {
   const [recentAllocations, setRecentAllocations] = useState<AllocationWithDetails[]>([]);
   const [overdueReturns, setOverdueReturns] = useState<OverdueReturn[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Modal states
-  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
-  const [offboardingModal, setOffboardingModal] = useState<{
-    open: boolean;
-    employeeId: string;
-    employeeName: string;
-  }>({ open: false, employeeId: "", employeeName: "" });
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadData();
   }, []);
 
   const handleOpenOffboardingModal = (item: OverdueReturn) => {
-    setOffboardingModal({
-      open: true,
-      employeeId: item.employeeId,
-      employeeName: item.employeeName,
-    });
-  };
-
-  const handleOffboardingSuccess = () => {
-    // Mark the item as resolved after successful offboarding
-    setOverdueReturns((prev) =>
-      prev.map((item) => (item.employeeId === offboardingModal.employeeId ? { ...item, resolved: true } : item)),
-    );
-    // Reload data to refresh allocations
-    loadData();
+    navigate('/allocations?action=offboarding');
   };
 
   const loadData = async () => {
@@ -129,12 +108,12 @@ export default function Dashboard() {
 
         {/* Quick Actions */}
         <div className="flex gap-3">
-          <Button onClick={() => setIsOnboardingOpen(true)} className="gap-2">
+          <Button onClick={() => navigate('/allocations?action=onboarding')} className="gap-2">
             <UserPlus className="w-4 h-4" />
             Onboarding
           </Button>
           <Button
-            onClick={() => setOffboardingModal({ open: true, employeeId: "", employeeName: "" })}
+            onClick={() => navigate('/allocations?action=offboarding')}
             variant="outline"
             className="gap-2"
           >
@@ -344,17 +323,6 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Onboarding Modal */}
-      <OnboardingModal open={isOnboardingOpen} onOpenChange={setIsOnboardingOpen} onSuccess={loadData} />
-
-      {/* Offboarding Modal */}
-      <OffboardingModal
-        open={offboardingModal.open}
-        onOpenChange={(open) => setOffboardingModal((prev) => ({ ...prev, open }))}
-        employeeId={offboardingModal.employeeId}
-        employeeName={offboardingModal.employeeName}
-        onSuccess={handleOffboardingSuccess}
-      />
     </div>
   );
 }
