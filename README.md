@@ -1,3 +1,5 @@
+teste de commit
+
 # Yellow Kite - Sistema de Gestão de Equipamentos
 
 Sistema web interno para gerenciamento de equipamentos de TI, substituindo controle por planilhas com rastreabilidade, controle de custos e formalização de entrada/saída de equipamentos.
