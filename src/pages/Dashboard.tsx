@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Users, DollarSign, Package, AlertTriangle, UserPlus, UserMinus } from "lucide-react";
 import { equipmentService } from "@/services/equipmentService";
 import { employeeService } from "@/services/employeeService";
 import { allocationService } from "@/services/allocationService";
 import { AllocationWithDetails, OverdueReturn } from "@/types";
 import { Button } from "@/components/ui/button";
+import { OffboardingModal } from "@/components/OffboardingModal";
+import { OnboardingModal } from "@/components/OnboardingModal";
 
 interface Stats {
   totalEquipments: number;
@@ -28,14 +29,24 @@ export default function Dashboard() {
   const [recentAllocations, setRecentAllocations] = useState<AllocationWithDetails[]>([]);
   const [overdueReturns, setOverdueReturns] = useState<OverdueReturn[]>([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  const [offboardingModal, setOffboardingModal] = useState<{
+    open: boolean;
+    employeeId: string;
+    employeeName: string;
+  }>({ open: false, employeeId: "", employeeName: "" });
 
   useEffect(() => {
     loadData();
   }, []);
 
   const handleOpenOffboardingModal = (item: OverdueReturn) => {
-    navigate('/allocations?action=offboarding');
+    setOffboardingModal({
+      open: true,
+      employeeId: item.employeeId,
+      employeeName: item.employeeName,
+    });
   };
 
   const loadData = async () => {
@@ -108,12 +119,12 @@ export default function Dashboard() {
 
         {/* Quick Actions */}
         <div className="flex gap-3">
-          <Button onClick={() => navigate('/allocations?action=onboarding')} className="gap-2">
+          <Button onClick={() => setIsOnboardingOpen(true)} className="gap-2">
             <UserPlus className="w-4 h-4" />
             Onboarding
           </Button>
           <Button
-            onClick={() => navigate('/allocations?action=offboarding')}
+            onClick={() => setOffboardingModal({ open: true, employeeId: "", employeeName: "" })}
             variant="outline"
             className="gap-2"
           >
@@ -323,6 +334,15 @@ export default function Dashboard() {
         )}
       </div>
 
+      <OnboardingModal open={isOnboardingOpen} onOpenChange={setIsOnboardingOpen} onSuccess={loadData} />
+
+      <OffboardingModal
+        open={offboardingModal.open}
+        onOpenChange={(open) => setOffboardingModal((prev) => ({ ...prev, open }))}
+        employeeId={offboardingModal.employeeId}
+        employeeName={offboardingModal.employeeName}
+        onSuccess={loadData}
+      />
     </div>
   );
 }
