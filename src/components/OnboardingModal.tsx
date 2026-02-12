@@ -5,18 +5,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Calendar } from '@/components/ui/calendar';
 import {
   Popover,
@@ -25,6 +17,7 @@ import {
 } from '@/components/ui/popover';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { CategoryIcon } from '@/components/ui/CategoryIcon';
+import { EmployeeCombobox } from '@/components/EmployeeCombobox';
 import { employeeService } from '@/services/employeeService';
 import { equipmentService } from '@/services/equipmentService';
 import { allocationService } from '@/services/allocationService';
@@ -54,7 +47,6 @@ export function OnboardingModal({
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
-  const [equipmentConditions, setEquipmentConditions] = useState<Record<string, string>>({});
   const [allocationDate, setAllocationDate] = useState<Date>(new Date());
   const [movementType, setMovementType] = useState<'kit' | 'avulsa'>('kit');
   const [environmentFilter, setEnvironmentFilter] = useState<{ station: boolean; field: boolean }>({ station: false, field: false });
@@ -105,15 +97,7 @@ export function OnboardingModal({
 
     setLoading(true);
     try {
-      const conditionNotes = selectedEquipments
-        .map(id => {
-          const eq = availableEquipments.find(e => e.id === id);
-          const cond = equipmentConditions[id];
-          return cond ? `${eq?.name}: ${cond}` : null;
-        })
-        .filter(Boolean)
-        .join('; ');
-      const finalNotes = [notes, conditionNotes].filter(Boolean).join(' | ');
+      const finalNotes = notes || undefined;
 
       await allocationService.allocate(selectedEmployee, selectedEquipments, finalNotes, allocationDate.toISOString(), returnDeadline?.toISOString());
 
@@ -130,7 +114,6 @@ export function OnboardingModal({
           name: eq.name,
           serialNumber: eq.serialNumber,
           purchaseValue: eq.purchaseValue,
-          condition: equipmentConditions[eq.id],
         })),
         term,
         date: allocationDate.toISOString(),
@@ -154,7 +137,6 @@ export function OnboardingModal({
     setSelectedEmployee('');
     setSelectedEquipments([]);
     setNotes('');
-    setEquipmentConditions({});
     setMovementType('kit');
     setEnvironmentFilter({ station: false, field: false });
     setReturnDeadline(undefined);
@@ -238,12 +220,9 @@ export function OnboardingModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[650px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <UserPlus className="w-5 h-5" />
-            Onboarding - Entrega de Equipamentos
-          </DialogTitle>
+          <DialogTitle>Onboarding - Entrega de Equipamentos</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6 mt-4">
@@ -253,21 +232,14 @@ export function OnboardingModal({
             </div>
           ) : (
             <>
-              {/* Employee Selection */}
+              {/* Employee Selection - EmployeeCombobox */}
               <div className="space-y-2">
                 <Label>Colaborador</Label>
-                <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um colaborador" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {employees.map(emp => (
-                      <SelectItem key={emp.id} value={emp.id}>
-                        {emp.name} - {emp.department}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <EmployeeCombobox
+                  employees={employees}
+                  value={selectedEmployee}
+                  onValueChange={setSelectedEmployee}
+                />
               </div>
 
               {/* Tipo de Movimentação */}
@@ -380,10 +352,10 @@ export function OnboardingModal({
               {/* Equipment List */}
               <div className="space-y-2">
                 <Label>Equipamentos Disponíveis</Label>
-                <div className="max-h-[200px] overflow-y-auto border rounded-xl p-2 space-y-2">
+                <div className="max-h-[250px] overflow-y-auto border rounded-xl p-2 space-y-2">
                   {filteredEquipments.length > 0 ? (
                     filteredEquipments.map(eq => (
-                      <div key={eq.id} className="space-y-2">
+                      <div key={eq.id}>
                         <div
                           className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
                           onClick={() => handleToggleEquipment(eq.id)}
@@ -401,14 +373,11 @@ export function OnboardingModal({
                       </div>
                     ))
                   ) : (
-                    <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-                      <Package className="w-8 h-8 mb-2" />
-                      <p className="text-sm">
-                        {!environmentFilter.station && !environmentFilter.field
-                          ? 'Selecione ao menos um ambiente'
-                          : 'Nenhum equipamento disponível'}
-                      </p>
-                    </div>
+                    <p className="text-center py-4 text-muted-foreground">
+                      {!environmentFilter.station && !environmentFilter.field
+                        ? 'Selecione ao menos um ambiente'
+                        : 'Nenhum equipamento disponível'}
+                    </p>
                   )}
                 </div>
               </div>
@@ -440,8 +409,45 @@ export function OnboardingModal({
                 <Button variant="outline" onClick={handleClose}>
                   Cancelar
                 </Button>
-                <Button 
-                  onClick={handleOnboarding} 
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (!selectedEmployee || selectedEquipments.length === 0) {
+                      toast.error('Selecione um colaborador e pelo menos um equipamento');
+                      return;
+                    }
+                    const employee = employees.find(e => e.id === selectedEmployee)!;
+                    const equipments = availableEquipments.filter(e => selectedEquipments.includes(e.id));
+                    const term = allocationService.generateResponsibilityTerm(
+                      employee,
+                      equipments,
+                      allocationDate.toISOString()
+                    );
+                    setTermPreview(term);
+                    setTermEmailPayload({
+                      type: 'onboarding',
+                      employee: { name: employee.name, email: employee.email, role: employee.role, department: employee.department },
+                      equipments: equipments.map(eq => ({
+                        name: eq.name,
+                        serialNumber: eq.serialNumber,
+                        purchaseValue: eq.purchaseValue,
+                      })),
+                      term,
+                      date: allocationDate.toISOString(),
+                      totalValue: equipments.reduce((sum, e) => sum + e.purchaseValue, 0),
+                      movementType,
+                      returnDeadline: returnDeadline?.toISOString(),
+                    });
+                    setIsTermOpen(true);
+                  }}
+                  disabled={!selectedEmployee || selectedEquipments.length === 0}
+                  className="gap-2"
+                >
+                  <FileText className="w-4 h-4" />
+                  Gerar Termo
+                </Button>
+                <Button
+                  onClick={handleOnboarding}
                   disabled={loading || !selectedEmployee || selectedEquipments.length === 0}
                 >
                   {loading ? 'Processando...' : 'Confirmar Entrega'}

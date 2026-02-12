@@ -16,13 +16,23 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { CategoryIcon } from '@/components/ui/CategoryIcon';
+import { EmployeeCombobox } from '@/components/EmployeeCombobox';
 import { employeeService } from '@/services/employeeService';
 import { allocationService } from '@/services/allocationService';
 import { webhookService, TermEmailPayload } from '@/services/webhookService';
 import { Employee, AllocationWithDetails } from '@/types';
 import { toast } from 'sonner';
-import { UserMinus, Package, FileText, Mail } from 'lucide-react';
+import { UserMinus, Package, FileText, Mail, CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 interface OffboardingModalProps {
   open: boolean;
@@ -47,6 +57,8 @@ export function OffboardingModal({
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
+  const [returnDate, setReturnDate] = useState<Date>(new Date());
+  const [returnDestinations, setReturnDestinations] = useState<Record<string, 'available' | 'maintenance'>>({});
 
   // Term preview
   const [termPreview, setTermPreview] = useState('');
@@ -100,6 +112,7 @@ export function OffboardingModal({
     const emp = employees.find(e => e.id === empId);
     setSelectedEmployeeName(emp?.name || '');
     setSelectedAllocations([]);
+    setReturnDestinations({});
     await loadActiveAllocations(empId);
   };
 
@@ -128,7 +141,8 @@ export function OffboardingModal({
     setLoading(true);
     try {
       for (const allocationId of selectedAllocations) {
-        await allocationService.deallocate(allocationId, notes);
+        const destination = returnDestinations[allocationId] || 'available';
+        await allocationService.deallocate(allocationId, notes, returnDate.toISOString(), destination);
       }
 
       // If all allocations returned, deactivate employee
@@ -152,7 +166,7 @@ export function OffboardingModal({
         const term = allocationService.generateReturnTerm(
           { name: emp.name, role: emp.role, email: emp.email },
           returnedEquipments,
-          new Date().toISOString(),
+          returnDate.toISOString(),
           {},
           activeAllocations
         );
@@ -161,9 +175,17 @@ export function OffboardingModal({
         setTermEmailPayload({
           type: 'offboarding',
           employee: { name: emp.name, email: emp.email, role: emp.role, department: emp.department },
-          equipments: returnedEquipments,
+          equipments: selectedAllocations
+            .map(id => activeAllocations.find(a => a.id === id))
+            .filter(Boolean)
+            .map(a => ({
+              name: a!.equipment.name,
+              serialNumber: a!.equipment.serialNumber,
+              purchaseValue: a!.equipment.purchaseValue,
+              destination: returnDestinations[a!.id] || 'available',
+            })),
           term,
-          date: new Date().toISOString(),
+          date: returnDate.toISOString(),
           totalValue: returnedEquipments.reduce((sum, e) => sum + e.purchaseValue, 0),
         });
         setIsTermOpen(true);
@@ -185,6 +207,8 @@ export function OffboardingModal({
     setSelectedAllocations([]);
     setActiveAllocations([]);
     setNotes('');
+    setReturnDate(new Date());
+    setReturnDestinations({});
     setTermPreview('');
     setTermEmailPayload(null);
     setIsTermOpen(false);
@@ -259,36 +283,23 @@ export function OffboardingModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[650px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <UserMinus className="w-5 h-5" />
-            Offboarding - Devolução
-          </DialogTitle>
+          <DialogTitle>Offboarding - Devolução de Equipamentos</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6 mt-4">
-          {/* Employee Selector (when not pre-selected) */}
-          {showEmployeeSelector && (
+          {/* Employee Selector */}
+          {showEmployeeSelector ? (
             <div className="space-y-2">
               <Label>Colaborador</Label>
-              <Select value={selectedEmployeeId} onValueChange={handleEmployeeChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um colaborador" />
-                </SelectTrigger>
-                <SelectContent>
-                  {employees.map(emp => (
-                    <SelectItem key={emp.id} value={emp.id}>
-                      {emp.name} - {emp.department}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <EmployeeCombobox
+                employees={employees}
+                value={selectedEmployeeId}
+                onValueChange={handleEmployeeChange}
+              />
             </div>
-          )}
-
-          {/* Employee Info (when pre-selected) */}
-          {!showEmployeeSelector && selectedEmployeeName && (
+          ) : selectedEmployeeName && (
             <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50">
               <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
                 <span className="text-primary-foreground font-semibold text-lg">
@@ -304,11 +315,39 @@ export function OffboardingModal({
             </div>
           )}
 
+          {/* Return Date */}
+          {selectedEmployeeId && (
+            <div className="space-y-2">
+              <Label>Data de Recebimento</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-left font-normal"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {format(returnDate, "dd/MM/yyyy", { locale: ptBR })}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={returnDate}
+                    onSelect={(d) => d && setReturnDate(d)}
+                    initialFocus
+                    locale={ptBR}
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
+
           {/* Allocations List */}
           {selectedEmployeeId && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>Equipamentos para Devolução</Label>
+                <Label>Conferência de Itens</Label>
                 {activeAllocations.length > 1 && (
                   <Button
                     variant="ghost"
@@ -323,27 +362,49 @@ export function OffboardingModal({
                 )}
               </div>
               
-              <div className="max-h-[200px] overflow-y-auto border rounded-xl p-2 space-y-2">
+              <div className="max-h-[300px] overflow-y-auto border rounded-xl p-2 space-y-2">
                 {loadingData ? (
                   <div className="flex items-center justify-center py-8">
                     <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent"></div>
                   </div>
                 ) : activeAllocations.length > 0 ? (
                   activeAllocations.map(alloc => (
-                    <div
-                      key={alloc.id}
-                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
-                      onClick={() => handleToggleAllocation(alloc.id)}
-                    >
-                      <Checkbox checked={selectedAllocations.includes(alloc.id)} />
-                      <CategoryIcon category={alloc.equipment.category} className="w-5 h-5 text-muted-foreground" />
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">{alloc.equipment.name}</p>
-                        <p className="text-xs text-muted-foreground">{alloc.equipment.serialNumber}</p>
+                    <div key={alloc.id} className="space-y-2">
+                      <div
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
+                        onClick={() => handleToggleAllocation(alloc.id)}
+                      >
+                        <Checkbox checked={selectedAllocations.includes(alloc.id)} />
+                        <CategoryIcon category={alloc.equipment.category} className="w-5 h-5 text-muted-foreground" />
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{alloc.equipment.name}</p>
+                          <p className="text-xs text-muted-foreground">{alloc.equipment.serialNumber}</p>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(alloc.allocatedAt).toLocaleDateString('pt-BR')}
+                        </span>
                       </div>
-                      <span className="text-sm font-medium">
-                        R$ {alloc.equipment.purchaseValue.toLocaleString('pt-BR')}
-                      </span>
+                      {selectedAllocations.includes(alloc.id) && (
+                        <div className="pl-10 pr-3 pb-2">
+                          <Select
+                            value={returnDestinations[alloc.id] || 'available'}
+                            onValueChange={(val: 'available' | 'maintenance') =>
+                              setReturnDestinations(prev => ({
+                                ...prev,
+                                [alloc.id]: val,
+                              }))
+                            }
+                          >
+                            <SelectTrigger className="h-8 text-xs" onClick={e => e.stopPropagation()}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="available">Devolver ao Estoque (Disponível)</SelectItem>
+                              <SelectItem value="maintenance">Enviar para Manutenção</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                     </div>
                   ))
                 ) : (
@@ -360,11 +421,16 @@ export function OffboardingModal({
           {selectedAllocations.length > 0 && (
             <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20">
               <span className="text-sm text-muted-foreground">
-                {selectedAllocations.length} item(s) selecionado(s)
+                {selectedAllocations.length} item(s) conferido(s)
               </span>
-              <span className="font-semibold text-primary">
-                R$ {totalValue.toLocaleString('pt-BR')}
-              </span>
+              <div className="flex gap-3 text-xs">
+                <span className="text-muted-foreground">
+                  {selectedAllocations.filter(id => (returnDestinations[id] || 'available') === 'available').length} → Estoque
+                </span>
+                <span className="text-muted-foreground">
+                  {selectedAllocations.filter(id => returnDestinations[id] === 'maintenance').length} → Manutenção
+                </span>
+              </div>
             </div>
           )}
 
@@ -375,7 +441,7 @@ export function OffboardingModal({
               <Textarea
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
-                placeholder="Ex: Equipamentos devolvidos em bom estado"
+                placeholder="Ex: Colaborador desligado, equipamentos conferidos"
               />
             </div>
           )}
@@ -389,7 +455,7 @@ export function OffboardingModal({
               onClick={handleOffboarding} 
               disabled={loading || selectedAllocations.length === 0}
             >
-              {loading ? 'Processando...' : 'Confirmar Devolução'}
+              {loading ? 'Processando...' : `Confirmar Devolução (${selectedAllocations.length})`}
             </Button>
           </div>
         </div>
