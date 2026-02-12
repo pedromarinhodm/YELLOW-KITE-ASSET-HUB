@@ -60,9 +60,11 @@ export default function Dashboard() {
   };
 
   const loadData = async () => {
-    const equipmentStats = await equipmentService.getStats();
-    const employees = await employeeService.getAll();
-    const allocations = await allocationService.getAllWithDetails();
+    const [equipmentStats, employees, allocations] = await Promise.all([
+      equipmentService.getStats(),
+      employeeService.getAll(),
+      allocationService.getAllWithDetails(),
+    ]);
 
     setStats({
       totalEquipments: equipmentStats.total,
