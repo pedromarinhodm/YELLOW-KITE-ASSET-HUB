@@ -36,7 +36,7 @@ import { exportService } from "@/services/exportService";
 import { CATEGORY_LABELS as CAT_LABELS_EXPORT, STATUS_LABELS as STATUS_LABELS_EXPORT, CLASSIFICATION_LABELS as CLASS_LABELS_EXPORT } from "@/types";
 
 const allCategories: EquipmentCategory[] = [...STATION_CATEGORIES, ...FIELD_CATEGORIES];
-const statuses: EquipmentStatus[] = ["available", "allocated", "maintenance", "reserved"];
+const statuses: EquipmentStatus[] = ["available", "allocated", "maintenance"];
 const classifications: EquipmentClassification[] = ["station", "field"];
 
 export default function Inventory() {
