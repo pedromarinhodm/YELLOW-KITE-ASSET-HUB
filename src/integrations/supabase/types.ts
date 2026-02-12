@@ -22,6 +22,7 @@ export type Database = {
           equipment_id: string
           id: string
           notes: string | null
+          return_deadline: string | null
           returned_at: string | null
           term_signed: boolean | null
           term_signed_at: string | null
@@ -34,6 +35,7 @@ export type Database = {
           equipment_id: string
           id?: string
           notes?: string | null
+          return_deadline?: string | null
           returned_at?: string | null
           term_signed?: boolean | null
           term_signed_at?: string | null
@@ -46,6 +48,7 @@ export type Database = {
           equipment_id?: string
           id?: string
           notes?: string | null
+          return_deadline?: string | null
           returned_at?: string | null
           term_signed?: boolean | null
           term_signed_at?: string | null

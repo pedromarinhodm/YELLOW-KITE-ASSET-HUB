@@ -12,6 +12,7 @@ const mapRow = (row: any): Allocation => ({
   type: row.type,
   termSigned: row.term_signed,
   termSignedAt: row.term_signed_at,
+  returnDeadline: row.return_deadline,
 });
 
 const mapRowWithDetails = (row: any): AllocationWithDetails => ({
@@ -82,7 +83,8 @@ export const allocationService = {
     employeeId: string,
     equipmentIds: string[],
     notes?: string,
-    allocatedAt?: string
+    allocatedAt?: string,
+    returnDeadline?: string
   ): Promise<Allocation[]> => {
     const rows = equipmentIds.map(equipmentId => ({
       employee_id: employeeId,
@@ -90,6 +92,7 @@ export const allocationService = {
       allocated_at: allocatedAt || new Date().toISOString(),
       type: 'onboarding',
       notes,
+      return_deadline: returnDeadline || null,
     }));
 
     const { data, error } = await supabase.from('allocations').insert(rows).select();
