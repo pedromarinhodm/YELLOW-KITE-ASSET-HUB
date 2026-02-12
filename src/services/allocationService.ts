@@ -146,41 +146,30 @@ export const allocationService = {
 
     const totalValue = equipments.reduce((sum, e) => sum + e.purchaseValue, 0);
 
-    return `
-═══════════════════════════════════════════════════════════════
-                    TERMO DE RESPONSABILIDADE
-                    YELLOW KITE - GESTÃO DE EQUIPAMENTOS
-═══════════════════════════════════════════════════════════════
+    return `TERMO DE RESPONSABILIDADE
+YELLOW KITE - GESTÃO DE EQUIPAMENTOS
+──────────────────────────────────────
 
 Data: ${new Date(date).toLocaleDateString('pt-BR')}
 
-COLABORADOR:
+COLABORADOR
 Nome: ${employee.name}
 Cargo: ${employee.role}
 Email: ${employee.email}
 
-EQUIPAMENTOS RECEBIDOS:
+EQUIPAMENTOS RECEBIDOS
 ${equipmentsList}
 
-VALOR TOTAL: R$ ${totalValue.toLocaleString('pt-BR')}
+Valor Total: R$ ${totalValue.toLocaleString('pt-BR')}
 
-═══════════════════════════════════════════════════════════════
+──────────────────────────────────────
 
-Declaro ter recebido os equipamentos listados acima em perfeito
-estado de funcionamento e me comprometo a:
+Declaro ter recebido os equipamentos listados acima em perfeito estado de funcionamento e me comprometo a:
 
 1. Zelar pela conservação e bom uso dos equipamentos;
 2. Comunicar imediatamente qualquer defeito ou avaria;
 3. Não emprestar ou ceder a terceiros;
-4. Devolver os equipamentos em bom estado ao término do vínculo.
-
-═══════════════════════════════════════════════════════════════
-
-_________________________          _________________________
-   Colaborador                        RH Yellow Kite
-
-═══════════════════════════════════════════════════════════════
-    `.trim();
+4. Devolver os equipamentos em bom estado ao término do vínculo.`;
   },
 
   generateReturnTerm: (
@@ -200,36 +189,24 @@ _________________________          _________________________
 
     const totalValue = equipments.reduce((sum, e) => sum + e.purchaseValue, 0);
 
-    return `
-═══════════════════════════════════════════════════════════════
-                    TERMO DE DEVOLUÇÃO
-                    YELLOW KITE - GESTÃO DE EQUIPAMENTOS
-═══════════════════════════════════════════════════════════════
+    return `TERMO DE DEVOLUÇÃO
+YELLOW KITE - GESTÃO DE EQUIPAMENTOS
+──────────────────────────────────────
 
 Data de Devolução: ${new Date(date).toLocaleDateString('pt-BR')}
 
-COLABORADOR:
+COLABORADOR
 Nome: ${employee.name}
 Cargo: ${employee.role}
 Email: ${employee.email}
 
-EQUIPAMENTOS DEVOLVIDOS:
+EQUIPAMENTOS DEVOLVIDOS
 ${equipmentsList}
 
-VALOR TOTAL: R$ ${totalValue.toLocaleString('pt-BR')}
+Valor Total: R$ ${totalValue.toLocaleString('pt-BR')}
 
-═══════════════════════════════════════════════════════════════
+──────────────────────────────────────
 
-Declaro ter devolvido os equipamentos listados acima e que a
-empresa confirma o recebimento dos mesmos nas condições
-descritas individualmente.
-
-═══════════════════════════════════════════════════════════════
-
-_________________________          _________________________
-   Colaborador                        RH Yellow Kite
-
-═══════════════════════════════════════════════════════════════
-    `.trim();
+Declaro ter devolvido os equipamentos listados acima e que a empresa confirma o recebimento dos mesmos nas condições descritas individualmente.`;
   },
 };
