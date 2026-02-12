@@ -56,7 +56,7 @@ export default function EmployeeDetailDialog({ employee, onClose }: EmployeeDeta
           </div>
         ) : (
           <Tabs defaultValue="setup" className="w-full mt-4">
-            <TabsList className="grid w-full grid-cols-4 mb-4">
+            <TabsList className="grid w-full grid-cols-3 mb-4">
               <TabsTrigger value="setup" className="gap-1.5 text-xs">
                 <Building2 className="w-3.5 h-3.5" />
                 Setup
@@ -68,10 +68,6 @@ export default function EmployeeDetailDialog({ employee, onClose }: EmployeeDeta
               <TabsTrigger value="historico" className="gap-1.5 text-xs">
                 <History className="w-3.5 h-3.5" />
                 Histórico
-              </TabsTrigger>
-              <TabsTrigger value="termo" className="gap-1.5 text-xs">
-                <FileCheck className="w-3.5 h-3.5" />
-                Termo
               </TabsTrigger>
             </TabsList>
 
@@ -154,52 +150,7 @@ export default function EmployeeDetailDialog({ employee, onClose }: EmployeeDeta
               )}
             </TabsContent>
 
-            {/* Termo de Responsabilidade */}
-            <TabsContent value="termo" className="space-y-3">
-              {allAllocations.length > 0 ? (
-                allAllocations
-                  .filter((a) => !a.returnedAt)
-                  .map((allocation) => (
-                    <div
-                      key={allocation.id}
-                      className="flex items-center justify-between p-4 rounded-xl bg-muted"
-                    >
-                      <div className="flex items-center gap-3">
-                        {allocation.termSigned ? (
-                          <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                        ) : (
-                          <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
-                        )}
-                        <div>
-                          <p className="font-medium text-sm">{allocation.equipment.name}</p>
-                          <p className="text-xs text-muted-foreground">{allocation.equipment.serialNumber}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <Badge
-                          variant={allocation.termSigned ? "default" : "outline"}
-                          className={`text-[10px] ${allocation.termSigned ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20" : "text-amber-600 border-amber-500/30"}`}
-                        >
-                          {allocation.termSigned ? "Assinado" : "Pendente"}
-                        </Badge>
-                        {allocation.termSignedAt && (
-                          <p className="text-[10px] text-muted-foreground mt-1">
-                            {formatDate(allocation.termSignedAt)}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ))
-              ) : (
-                <p className="text-center text-muted-foreground py-8">Nenhum termo registrado</p>
-              )}
-              {allAllocations.filter((a) => !a.returnedAt && !a.termSigned).length > 0 && (
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 text-xs">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>Existem termos pendentes de assinatura para este colaborador.</span>
-                </div>
-              )}
-            </TabsContent>
+            {/* Termo de Responsabilidade - Oculto/Desativado */}
           </Tabs>
         )}
       </DialogContent>

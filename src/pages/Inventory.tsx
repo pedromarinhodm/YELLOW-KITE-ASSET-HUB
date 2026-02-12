@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Search, Filter, Edit2, Trash2, Building2, Smartphone, Download } from "lucide-react";
+import { Plus, Search, Filter, Edit2, Trash2, Building2, Smartphone, Download, Wrench } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -165,6 +165,13 @@ export default function Inventory() {
       await loadEquipments();
       setDeleteId(null);
     }
+  };
+
+  const handleToggleMaintenance = async (equipment: Equipment) => {
+    const newStatus: EquipmentStatus = equipment.status === 'maintenance' ? 'available' : 'maintenance';
+    await equipmentService.update(equipment.id, { status: newStatus });
+    toast.success(newStatus === 'maintenance' ? 'Equipamento marcado como em manutenção!' : 'Equipamento disponível novamente!');
+    await loadEquipments();
   };
 
   // Get available categories based on selected classification filter
@@ -472,6 +479,31 @@ export default function Inventory() {
 
                 <TooltipProvider>
                   <div className="flex gap-1">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleToggleMaintenance(equipment)}
+                          className={cn(
+                            "h-9 w-9",
+                            equipment.status === 'maintenance'
+                              ? "text-amber-500 hover:text-amber-600"
+                              : "text-muted-foreground hover:text-amber-500"
+                          )}
+                          disabled={equipment.status === 'allocated'}
+                        >
+                          <Wrench className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {equipment.status === 'allocated'
+                          ? 'Equipamento alocado'
+                          : equipment.status === 'maintenance'
+                            ? 'Remover da manutenção'
+                            : 'Enviar para manutenção'}
+                      </TooltipContent>
+                    </Tooltip>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
