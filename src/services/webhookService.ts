@@ -1,10 +1,7 @@
-// n8n Webhook Integration Service
-// Configure the webhook URLs from your n8n workflows
+// Email Service via SMTP (Hostinger)
+// Sends terms via Supabase Edge Function
 
-const N8N_WEBHOOK_URLS = {
-  sendOnboardingTerm: import.meta.env.VITE_N8N_WEBHOOK_ONBOARDING || '',
-  sendOffboardingTerm: import.meta.env.VITE_N8N_WEBHOOK_OFFBOARDING || '',
-};
+import { supabase } from '@/integrations/supabase/client';
 
 export interface TermEmailPayload {
   type: 'onboarding' | 'offboarding';
@@ -28,48 +25,26 @@ export interface TermEmailPayload {
   returnDeadline?: string;
 }
 
-export const webhookService = {
+export const emailService = {
   /**
-   * Sends the onboarding/offboarding term to the employee's email via n8n webhook.
-   * Returns true if the webhook was called successfully.
+   * Sends the onboarding/offboarding term to the employee's email via SMTP.
    */
   sendTermByEmail: async (payload: TermEmailPayload): Promise<boolean> => {
-    const webhookUrl = payload.type === 'onboarding'
-      ? N8N_WEBHOOK_URLS.sendOnboardingTerm
-      : N8N_WEBHOOK_URLS.sendOffboardingTerm;
-
-    if (!webhookUrl) {
-      throw new Error(
-        `Webhook n8n não configurado para ${payload.type}. ` +
-        `Configure a variável VITE_N8N_WEBHOOK_${payload.type.toUpperCase()} no ambiente.`
-      );
-    }
-
-    const response = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        ...payload,
-        sentAt: new Date().toISOString(),
-      }),
+    const { data, error } = await supabase.functions.invoke('send-term-email', {
+      body: payload,
     });
 
-    if (!response.ok) {
-      throw new Error(`Erro ao enviar para n8n: ${response.status} ${response.statusText}`);
+    if (error) {
+      throw new Error(error.message || 'Erro ao enviar e-mail');
+    }
+
+    if (!data?.success) {
+      throw new Error(data?.error || 'Erro ao enviar e-mail');
     }
 
     return true;
   },
-
-  /**
-   * Check if n8n webhooks are configured
-   */
-  isConfigured: (type: 'onboarding' | 'offboarding'): boolean => {
-    const url = type === 'onboarding'
-      ? N8N_WEBHOOK_URLS.sendOnboardingTerm
-      : N8N_WEBHOOK_URLS.sendOffboardingTerm;
-    return !!url;
-  },
 };
+
+// Keep backward compatibility
+export const webhookService = emailService;
