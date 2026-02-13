@@ -1,10 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { SmtpClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 interface TermEmailPayload {
@@ -53,13 +53,18 @@ serve(async (req) => {
         ? `Termo de Responsabilidade - ${payload.employee.name}`
         : `Termo de Devolução - ${payload.employee.name}`;
 
-    const client = new SmtpClient();
+    const port = parseInt(SMTP_PORT);
 
-    await client.connectTLS({
-      hostname: SMTP_HOST,
-      port: parseInt(SMTP_PORT),
-      username: SMTP_USER,
-      password: SMTP_PASS,
+    const client = new SMTPClient({
+      connection: {
+        hostname: SMTP_HOST,
+        port,
+        tls: port === 465,
+        auth: {
+          username: SMTP_USER,
+          password: SMTP_PASS,
+        },
+      },
     });
 
     await client.send({
