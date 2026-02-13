@@ -318,7 +318,7 @@ export function OffboardingModal({
           {/* Return Date */}
           {selectedEmployeeId && (
             <div className="space-y-2">
-              <Label>Data de Recebimento</Label>
+              <Label>Data de Devolução</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button

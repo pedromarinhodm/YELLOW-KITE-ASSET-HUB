@@ -57,7 +57,8 @@ export default function Allocations() {
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
+  const [dateFilterStart, setDateFilterStart] = useState<Date | undefined>(undefined);
+  const [dateFilterEnd, setDateFilterEnd] = useState<Date | undefined>(undefined);
 
   // Onboarding state
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
@@ -385,18 +386,18 @@ export default function Allocations() {
                 variant="outline"
                 className={cn(
                   "w-full sm:w-[200px] justify-start text-left font-normal",
-                  !dateFilter && "text-muted-foreground"
+                  !dateFilterStart && "text-muted-foreground"
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateFilter ? format(dateFilter, "dd/MM/yyyy", { locale: ptBR }) : "Filtrar por data"}
+                {dateFilterStart ? format(dateFilterStart, "dd/MM/yyyy", { locale: ptBR }) : "Data inicial"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
-                selected={dateFilter}
-                onSelect={setDateFilter}
+                selected={dateFilterStart}
+                onSelect={setDateFilterStart}
                 initialFocus
                 className={cn("p-3 pointer-events-auto")}
                 locale={ptBR}
@@ -404,11 +405,36 @@ export default function Allocations() {
             </PopoverContent>
           </Popover>
 
-          {dateFilter && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full sm:w-[200px] justify-start text-left font-normal",
+                  !dateFilterEnd && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateFilterEnd ? format(dateFilterEnd, "dd/MM/yyyy", { locale: ptBR }) : "Data final"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={dateFilterEnd}
+                onSelect={setDateFilterEnd}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+                locale={ptBR}
+              />
+            </PopoverContent>
+          </Popover>
+
+          {(dateFilterStart || dateFilterEnd) && (
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setDateFilter(undefined)}
+              onClick={() => { setDateFilterStart(undefined); setDateFilterEnd(undefined); }}
               className="shrink-0"
             >
               <X className="h-4 w-4" />
@@ -434,14 +460,21 @@ export default function Allocations() {
                 a.equipment.serialNumber.toLowerCase().includes(searchTerm.toLowerCase());
               const matchesDepartment = departmentFilter === 'all' || a.employee.department === departmentFilter;
               
-              // Date filter - matches allocatedAt date
+              // Date filter - matches allocatedAt within period
               let matchesDate = true;
-              if (dateFilter) {
+              if (dateFilterStart || dateFilterEnd) {
                 const allocationDate = new Date(a.allocatedAt);
-                matchesDate = 
-                  allocationDate.getFullYear() === dateFilter.getFullYear() &&
-                  allocationDate.getMonth() === dateFilter.getMonth() &&
-                  allocationDate.getDate() === dateFilter.getDate();
+                allocationDate.setHours(0, 0, 0, 0);
+                if (dateFilterStart) {
+                  const start = new Date(dateFilterStart);
+                  start.setHours(0, 0, 0, 0);
+                  if (allocationDate < start) matchesDate = false;
+                }
+                if (dateFilterEnd) {
+                  const end = new Date(dateFilterEnd);
+                  end.setHours(23, 59, 59, 999);
+                  if (allocationDate > end) matchesDate = false;
+                }
               }
               
               return matchesSearch && matchesDepartment && matchesDate;
@@ -485,9 +518,16 @@ export default function Allocations() {
                   {allocation.returnedAt ? (
                     <>
                       <p>{new Date(allocation.allocatedAt).toLocaleDateString('pt-BR')} → {new Date(allocation.returnedAt).toLocaleDateString('pt-BR')}</p>
-                      <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-                        Devolvido
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                          Devolvido
+                        </span>
+                        {allocation.employee.status === 'Desligado' && (
+                          <span className="text-xs px-2 py-1 rounded-full bg-destructive/10 text-destructive border border-destructive/20">
+                            Desligado
+                          </span>
+                        )}
+                      </div>
                     </>
                   ) : (
                     <>
@@ -752,7 +792,7 @@ export default function Allocations() {
             {selectedEmployee && (
               <>
                 <div className="space-y-2">
-                  <Label>Data de Recebimento</Label>
+                  <Label>Data de Devolução</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
