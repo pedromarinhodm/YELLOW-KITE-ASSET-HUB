@@ -1,6 +1,5 @@
-import { Allocation, AllocationWithDetails } from '@/types';
-import { supabase } from '@/integrations/supabase/client';
-import { equipmentService } from './equipmentService';
+﻿import { Allocation, AllocationWithDetails } from '@/types';
+import { apiClient } from './apiClient';
 
 const mapRow = (row: any): Allocation => ({
   id: row.id,
@@ -44,38 +43,22 @@ const mapRowWithDetails = (row: any): AllocationWithDetails => ({
 
 export const allocationService = {
   getAll: async (): Promise<Allocation[]> => {
-    const { data, error } = await supabase.from('allocations').select('*').order('allocated_at', { ascending: false });
-    if (error) throw error;
+    const data = await apiClient.get<any[]>('/allocations');
     return (data || []).map(mapRow);
   },
 
   getAllWithDetails: async (): Promise<AllocationWithDetails[]> => {
-    const { data, error } = await supabase
-      .from('allocations')
-      .select('*, employees(*), equipments(*)')
-      .order('allocated_at', { ascending: false });
-    if (error) throw error;
+    const data = await apiClient.get<any[]>('/allocations');
     return (data || []).filter(r => r.employees && r.equipments).map(mapRowWithDetails);
   },
 
   getByEmployee: async (employeeId: string): Promise<AllocationWithDetails[]> => {
-    const { data, error } = await supabase
-      .from('allocations')
-      .select('*, employees(*), equipments(*)')
-      .eq('employee_id', employeeId)
-      .order('allocated_at', { ascending: false });
-    if (error) throw error;
+    const data = await apiClient.get<any[]>(`/allocations?employeeId=${employeeId}`);
     return (data || []).filter(r => r.employees && r.equipments).map(mapRowWithDetails);
   },
 
   getActiveByEmployee: async (employeeId: string): Promise<AllocationWithDetails[]> => {
-    const { data, error } = await supabase
-      .from('allocations')
-      .select('*, employees(*), equipments(*)')
-      .eq('employee_id', employeeId)
-      .is('returned_at', null)
-      .order('allocated_at', { ascending: false });
-    if (error) throw error;
+    const data = await apiClient.get<any[]>(`/allocations?employeeId=${employeeId}&activeOnly=true`);
     return (data || []).filter(r => r.employees && r.equipments).map(mapRowWithDetails);
   },
 
@@ -86,53 +69,29 @@ export const allocationService = {
     allocatedAt?: string,
     returnDeadline?: string
   ): Promise<Allocation[]> => {
-    const rows = equipmentIds.map(equipmentId => ({
+    const data = await apiClient.post<any[]>('/allocations', {
       employee_id: employeeId,
-      equipment_id: equipmentId,
+      equipment_ids: equipmentIds,
       allocated_at: allocatedAt || new Date().toISOString(),
       type: 'onboarding',
       notes,
       return_deadline: returnDeadline || null,
-    }));
-
-    const { data, error } = await supabase.from('allocations').insert(rows).select();
-    if (error) throw error;
-
-    // Update equipment statuses
-    for (const equipmentId of equipmentIds) {
-      await equipmentService.update(equipmentId, { status: 'allocated' });
-    }
+    });
 
     return (data || []).map(mapRow);
   },
 
   deallocate: async (allocationId: string, notes?: string, returnedAt?: string, destination?: 'available' | 'maintenance'): Promise<Allocation | undefined> => {
-    // First get the allocation to find equipment id
-    const { data: existing, error: fetchError } = await supabase
-      .from('allocations')
-      .select('*')
-      .eq('id', allocationId)
-      .maybeSingle();
-    if (fetchError) throw fetchError;
-    if (!existing) return undefined;
-
-    const { data: row, error } = await supabase
-      .from('allocations')
-      .update({
+    try {
+      const row = await apiClient.patch<any>(`/allocations/${allocationId}/return`, {
         returned_at: returnedAt || new Date().toISOString(),
-        type: 'offboarding',
-        notes: notes || existing.notes,
-      })
-      .eq('id', allocationId)
-      .select()
-      .maybeSingle();
-    if (error) throw error;
-
-    // Update equipment status
-    const newStatus = destination || 'available';
-    await equipmentService.update(existing.equipment_id, { status: newStatus });
-
-    return row ? mapRow(row) : undefined;
+        notes,
+        destination: destination || 'available',
+      });
+      return row ? mapRow(row) : undefined;
+    } catch {
+      return undefined;
+    }
   },
 
   generateResponsibilityTerm: (
@@ -141,14 +100,14 @@ export const allocationService = {
     date: string
   ): string => {
     const equipmentsList = equipments
-      .map((e, i) => `${i + 1}. ${e.name} - Patrimônio: ${e.serialNumber} - Valor: R$ ${e.purchaseValue.toLocaleString('pt-BR')}`)
+      .map((e, i) => `${i + 1}. ${e.name} - PatrimÃ´nio: ${e.serialNumber} - Valor: R$ ${e.purchaseValue.toLocaleString('pt-BR')}`)
       .join('\n');
 
     const totalValue = equipments.reduce((sum, e) => sum + e.purchaseValue, 0);
 
     return `TERMO DE RESPONSABILIDADE
-YELLOW KITE - GESTÃO DE EQUIPAMENTOS
-──────────────────────────────────────
+YELLOW KITE - GESTÃƒO DE EQUIPAMENTOS
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 Data: ${new Date(date).toLocaleDateString('pt-BR')}
 
@@ -162,14 +121,14 @@ ${equipmentsList}
 
 Valor Total: R$ ${totalValue.toLocaleString('pt-BR')}
 
-──────────────────────────────────────
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 Declaro ter recebido os equipamentos listados acima em perfeito estado de funcionamento e me comprometo a:
 
-1. Zelar pela conservação e bom uso dos equipamentos;
+1. Zelar pela conservaÃ§Ã£o e bom uso dos equipamentos;
 2. Comunicar imediatamente qualquer defeito ou avaria;
-3. Não emprestar ou ceder a terceiros;
-4. Devolver os equipamentos em bom estado ao término do vínculo.`;
+3. NÃ£o emprestar ou ceder a terceiros;
+4. Devolver os equipamentos em bom estado ao tÃ©rmino do vÃ­nculo.`;
   },
 
   generateReturnTerm: (
@@ -182,18 +141,18 @@ Declaro ter recebido os equipamentos listados acima em perfeito estado de funcio
     const equipmentsList = equipments
       .map((e, i) => {
         const alloc = allocations.find(a => a.equipment.name === e.name);
-        const condition = alloc ? (conditions[alloc.id] || 'Não informado') : 'Não informado';
-        return `${i + 1}. ${e.name} - Patrimônio: ${e.serialNumber} - Valor: R$ ${e.purchaseValue.toLocaleString('pt-BR')}\n   Estado de Devolução: ${condition}`;
+        const condition = alloc ? (conditions[alloc.id] || 'NÃ£o informado') : 'NÃ£o informado';
+        return `${i + 1}. ${e.name} - PatrimÃ´nio: ${e.serialNumber} - Valor: R$ ${e.purchaseValue.toLocaleString('pt-BR')}\n   Estado de DevoluÃ§Ã£o: ${condition}`;
       })
       .join('\n');
 
     const totalValue = equipments.reduce((sum, e) => sum + e.purchaseValue, 0);
 
-    return `TERMO DE DEVOLUÇÃO
-YELLOW KITE - GESTÃO DE EQUIPAMENTOS
-──────────────────────────────────────
+    return `TERMO DE DEVOLUÃ‡ÃƒO
+YELLOW KITE - GESTÃƒO DE EQUIPAMENTOS
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-Data de Devolução: ${new Date(date).toLocaleDateString('pt-BR')}
+Data de DevoluÃ§Ã£o: ${new Date(date).toLocaleDateString('pt-BR')}
 
 COLABORADOR
 Nome: ${employee.name}
@@ -205,8 +164,8 @@ ${equipmentsList}
 
 Valor Total: R$ ${totalValue.toLocaleString('pt-BR')}
 
-──────────────────────────────────────
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-Declaro ter devolvido os equipamentos listados acima e que a empresa confirma o recebimento dos mesmos nas condições descritas individualmente.`;
+Declaro ter devolvido os equipamentos listados acima e que a empresa confirma o recebimento dos mesmos nas condiÃ§Ãµes descritas individualmente.`;
   },
 };

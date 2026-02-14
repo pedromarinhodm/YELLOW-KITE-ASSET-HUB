@@ -1,5 +1,5 @@
-import { Equipment, EquipmentCategory, EquipmentStatus, EquipmentClassification, FIELD_CATEGORIES } from '@/types';
-import { supabase } from '@/integrations/supabase/client';
+﻿import { Equipment, EquipmentCategory, EquipmentStatus, EquipmentClassification, FIELD_CATEGORIES } from '@/types';
+import { apiClient } from './apiClient';
 
 export const getClassificationFromCategory = (category: EquipmentCategory): EquipmentClassification => {
   if (FIELD_CATEGORIES.includes(category)) return 'field';
@@ -22,43 +22,41 @@ const mapRow = (row: any): Equipment => ({
 
 export const equipmentService = {
   getAll: async (): Promise<Equipment[]> => {
-    const { data, error } = await supabase.from('equipments').select('*').order('name');
-    if (error) throw error;
+    const data = await apiClient.get<any[]>('/equipments');
     return (data || []).map(mapRow);
   },
 
   getById: async (id: string): Promise<Equipment | undefined> => {
-    const { data, error } = await supabase.from('equipments').select('*').eq('id', id).maybeSingle();
-    if (error) throw error;
-    return data ? mapRow(data) : undefined;
+    try {
+      const data = await apiClient.get<any>(`/equipments/${id}`);
+      return data ? mapRow(data) : undefined;
+    } catch {
+      return undefined;
+    }
   },
 
   getByStatus: async (status: EquipmentStatus): Promise<Equipment[]> => {
-    const { data, error } = await supabase.from('equipments').select('*').eq('status', status);
-    if (error) throw error;
+    const data = await apiClient.get<any[]>(`/equipments?status=${status}`);
     return (data || []).map(mapRow);
   },
 
   getByCategory: async (category: EquipmentCategory): Promise<Equipment[]> => {
-    const { data, error } = await supabase.from('equipments').select('*').eq('category', category);
-    if (error) throw error;
+    const data = await apiClient.get<any[]>(`/equipments?category=${category}`);
     return (data || []).map(mapRow);
   },
 
   getByClassification: async (classification: EquipmentClassification): Promise<Equipment[]> => {
-    const { data, error } = await supabase.from('equipments').select('*').eq('classification', classification);
-    if (error) throw error;
+    const data = await apiClient.get<any[]>(`/equipments?classification=${classification}`);
     return (data || []).map(mapRow);
   },
 
   getAvailableByClassification: async (classification: EquipmentClassification): Promise<Equipment[]> => {
-    const { data, error } = await supabase.from('equipments').select('*').eq('classification', classification).eq('status', 'available');
-    if (error) throw error;
+    const data = await apiClient.get<any[]>(`/equipments?classification=${classification}&status=available`);
     return (data || []).map(mapRow);
   },
 
   create: async (data: Omit<Equipment, 'id' | 'createdAt' | 'updatedAt' | 'status'>): Promise<Equipment> => {
-    const { data: row, error } = await supabase.from('equipments').insert({
+    const row = await apiClient.post<any>('/equipments', {
       name: data.name,
       category: data.category,
       classification: data.classification,
@@ -66,8 +64,8 @@ export const equipmentService = {
       purchase_value: data.purchaseValue,
       purchase_date: data.purchaseDate,
       status: 'available',
-    }).select().single();
-    if (error) throw error;
+      image_url: data.imageUrl || null,
+    });
     return mapRow(row);
   },
 
@@ -82,26 +80,26 @@ export const equipmentService = {
     if (data.status !== undefined) updateData.status = data.status;
     if (data.imageUrl !== undefined) updateData.image_url = data.imageUrl;
 
-    const { data: row, error } = await supabase.from('equipments').update(updateData).eq('id', id).select().maybeSingle();
-    if (error) throw error;
-    return row ? mapRow(row) : undefined;
+    try {
+      const row = await apiClient.patch<any>(`/equipments/${id}`, updateData);
+      return row ? mapRow(row) : undefined;
+    } catch {
+      return undefined;
+    }
   },
 
   delete: async (id: string): Promise<boolean> => {
-    const { error } = await supabase.from('equipments').delete().eq('id', id);
-    if (error) throw error;
+    await apiClient.delete<void>(`/equipments/${id}`);
     return true;
   },
 
   getTotalValue: async (): Promise<number> => {
-    const { data, error } = await supabase.from('equipments').select('purchase_value');
-    if (error) throw error;
-    return (data || []).reduce((sum, e) => sum + Number(e.purchase_value), 0);
+    const rows = await apiClient.get<any[]>('/equipments');
+    return (rows || []).reduce((sum, e) => sum + Number(e.purchase_value), 0);
   },
 
   getStats: async () => {
-    const { data, error } = await supabase.from('equipments').select('status, classification, purchase_value');
-    if (error) throw error;
+    const data = await apiClient.get<any[]>('/equipments');
     const items = data || [];
     return {
       total: items.length,
