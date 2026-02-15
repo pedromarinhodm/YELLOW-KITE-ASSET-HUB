@@ -120,14 +120,6 @@ npm run dev
 npm run build
 ```
 
-## 📋 Próximos Passos
-
-- [ ] Integração com Lovable Cloud para persistência de dados
-- [ ] Autenticação de usuários (RH)
-- [ ] Upload de imagens de equipamentos
-- [ ] Relatórios e exportação de dados (PDF)
-- [ ] Notificações de manutenção
-
 ## 📄 Licença
 
 Projeto interno Yellow Kite - Todos os direitos reservados.
