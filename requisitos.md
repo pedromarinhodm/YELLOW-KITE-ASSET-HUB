@@ -256,7 +256,7 @@ Critérios de aceite:
 2. Fluxos criticos (onboarding/offboarding).
 3. Tratamento de erro de API e feedback visual.
 
-### 13.3 Manual (smoke)
+### 13.3 Manual
 1. Criar colaborador.
 2. Criar equipamento.
 3. Alocar equipamento.
