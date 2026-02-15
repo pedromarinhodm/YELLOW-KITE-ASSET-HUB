@@ -95,7 +95,7 @@ Sistema interno para gestao de equipamentos, colaboradores e ciclos de onboardin
 - `frontend/package.json`: scripts e dependencias do frontend (Vite, React, Tailwind, Radix, Vitest etc.).
 - `frontend/package-lock.json`: lockfile npm do frontend.
 - `frontend/bun.lockb`: lockfile Bun (quando ambiente usa Bun).
-- `frontend/README.md`: documentacao local historica do frontend.
+- `frontend/README.md`: documentacao local do frontend.
 - `frontend/index.html`: shell HTML da SPA e metadados iniciais.
 - `frontend/vite.config.ts`: config do Vite (porta 8080, alias `@`, plugin React SWC).
 - `frontend/vitest.config.ts`: config de testes (jsdom, setup, includes).
