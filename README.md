@@ -10,7 +10,6 @@ Sistema interno para gestao de equipamentos, colaboradores e ciclos de onboardin
 - Interface web (React + Vite + TypeScript).
 - Implementa telas de Dashboard, Inventario, Colaboradores e Alocacoes.
 - Consome a API backend via `fetch` encapsulado em services.
-- Chama Supabase Edge Function para envio de termos por e-mail.
 
 2. Backend (`backend/`)
 - API REST (Node.js + Express).
@@ -19,7 +18,6 @@ Sistema interno para gestao de equipamentos, colaboradores e ciclos de onboardin
 
 3. Banco e funcoes (`supabase/`)
 - Migrations SQL para schema e evolucao de tabelas.
-- Edge Function (`send-term-email`) para envio SMTP.
 
 ### Fluxo principal de dados
 
@@ -29,13 +27,6 @@ Sistema interno para gestao de equipamentos, colaboradores e ciclos de onboardin
 4. Backend processa a requisicao (rotas -> services).
 5. Services backend persistem/consultam dados no Supabase.
 6. Resposta volta ao frontend para renderizacao da UI.
-
-### Fluxo de termos (onboarding/offboarding)
-
-1. Frontend gera texto do termo em `allocationService`.
-2. Frontend monta `TermEmailPayload` em `webhookService`.
-3. Chama `supabase.functions.invoke('send-term-email')`.
-4. Edge Function em `supabase/functions/send-term-email/index.ts` envia e-mail SMTP.
 
 ## Estrutura do Projeto
 
@@ -136,7 +127,7 @@ Sistema interno para gestao de equipamentos, colaboradores e ciclos de onboardin
 - `frontend/src/pages/Dashboard.tsx`: metricas gerais, pendencias de devolucao e atalhos de onboarding/offboarding.
 - `frontend/src/pages/Inventory.tsx`: gestao completa de equipamentos (CRUD, filtros, exportacao, manutencao).
 - `frontend/src/pages/Employees.tsx`: gestao de colaboradores (CRUD, filtros, desligamento logico, acesso ao historico).
-- `frontend/src/pages/Allocations.tsx`: fluxo completo de alocacao/devolucao, filtros avancados, termos e envio por e-mail.
+- `frontend/src/pages/Allocations.tsx`: fluxo completo de alocacao/devolucao, filtros avancados, termos.
 - `frontend/src/pages/NotFound.tsx`: fallback para rotas inexistentes (404).
 
 #### Layout e componentes de dominio
@@ -156,7 +147,6 @@ Sistema interno para gestao de equipamentos, colaboradores e ciclos de onboardin
 - `frontend/src/services/equipmentService.ts`: adaptacao e operacoes de equipamentos via API.
 - `frontend/src/services/allocationService.ts`: operacoes de alocacao/devolucao e geracao textual de termos.
 - `frontend/src/services/exportService.ts`: exportacao para `.xlsx` e `.csv`.
-- `frontend/src/services/webhookService.ts`: envio de termos por e-mail via Supabase Edge Function.
 
 #### Tipos, hooks e utilitarios
 
@@ -236,7 +226,6 @@ Sistema interno para gestao de equipamentos, colaboradores e ciclos de onboardin
 ### Supabase (`supabase/`)
 
 - `supabase/config.toml`: configuracao do projeto Supabase CLI e funcoes (inclui `verify_jwt`).
-- `supabase/functions/send-term-email/index.ts`: Edge Function Deno que recebe payload e envia termos via SMTP.
 - `supabase/migrations/20260209174503_51ad32b8-1f94-4495-9323-36bc50ed882e.sql`: migration inicial (tabelas, FKs, RLS, policies, indices e triggers de `updated_at`).
 - `supabase/migrations/20260211131632_e920f1f1-3152-4fba-8aeb-45b1807b7e7d.sql`: adiciona coluna `status` em `employees`.
 - `supabase/migrations/20260212162548_9133ca51-4e11-49a4-b5fb-f0a112750c5e.sql`: adiciona coluna `return_deadline` em `allocations`.
@@ -289,15 +278,6 @@ Para migracao Lovable:
 - `VITE_API_URL` (default `http://localhost:3001/api`)
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_PUBLISHABLE_KEY`
-
-### Supabase Edge Function (secrets)
-
-- `SMTP_HOST`
-- `SMTP_PORT`
-- `SMTP_USER`
-- `SMTP_PASS`
-- `SMTP_FROM_EMAIL`
-- `SMTP_FROM_NAME` (opcional)
 
 ## Como Rodar
 
