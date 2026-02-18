@@ -2,6 +2,9 @@
 import { env } from "./env.js";
 
 export const supabaseAdmin = createClient(env.supabaseUrl, env.supabaseServiceRoleKey, {
+  db: {
+    schema: env.supabaseDbSchema,
+  },
   auth: {
     autoRefreshToken: false,
     persistSession: false,

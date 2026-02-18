@@ -88,12 +88,17 @@ async function main() {
   const sourceKey = requireEnv("SOURCE_SUPABASE_ANON_KEY");
   const targetUrl = process.env.TARGET_SUPABASE_URL || requireEnv("SUPABASE_URL");
   const targetKey = process.env.TARGET_SUPABASE_SERVICE_ROLE_KEY || requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+  const sourceSchema = process.env.SOURCE_SUPABASE_DB_SCHEMA || "public";
+  const targetSchema =
+    process.env.TARGET_SUPABASE_DB_SCHEMA || process.env.SUPABASE_DB_SCHEMA || "gestao_patrimonio";
 
   const source = createClient(sourceUrl, sourceKey, {
+    db: { schema: sourceSchema },
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
   const target = createClient(targetUrl, targetKey, {
+    db: { schema: targetSchema },
     auth: { persistSession: false, autoRefreshToken: false },
   });
 

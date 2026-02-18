@@ -157,7 +157,9 @@ async function main() {
     throw new Error("Uso: node scripts/import-csv-to-supabase.js --employees <file> --equipments <file> --allocations <file> [--truncate]");
   }
 
+  const schema = process.env.SUPABASE_DB_SCHEMA || "gestao_patrimonio";
   const supabase = createClient(requireEnv("SUPABASE_URL"), requireEnv("SUPABASE_SERVICE_ROLE_KEY"), {
+    db: { schema },
     auth: { persistSession: false, autoRefreshToken: false },
   });
 

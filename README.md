@@ -262,6 +262,7 @@ Sistema interno para gestao de equipamentos, colaboradores e ciclos de onboardin
 Obrigatorias:
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_DB_SCHEMA` (use `gestao_patrimonio`)
 
 Opcionais:
 - `PORT` (default `3001`)
@@ -270,14 +271,17 @@ Opcionais:
 Para migracao Lovable:
 - `SOURCE_SUPABASE_URL`
 - `SOURCE_SUPABASE_ANON_KEY`
+- `SOURCE_SUPABASE_DB_SCHEMA` (default `public`)
 - `TARGET_SUPABASE_URL` (opcional)
 - `TARGET_SUPABASE_SERVICE_ROLE_KEY` (opcional)
+- `TARGET_SUPABASE_DB_SCHEMA` (opcional, default `gestao_patrimonio`)
 
 ### Frontend
 
 - `VITE_API_URL` (default `http://localhost:3001/api`)
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_PUBLISHABLE_KEY`
+- `VITE_SUPABASE_DB_SCHEMA` (default `gestao_patrimonio`)
 
 ## Como Rodar
 
