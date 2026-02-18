@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "yellow-kite-backend",
   "version": "1.0.0",
   "private": true,
@@ -6,10 +6,10 @@
   "type": "module",
   "main": "src/server.js",
   "scripts": {
-    "dev": "node --watch src/server.js",
-    "start": "node src/server.js",
-    "migrate:lovable": "node scripts/migrate-lovable-cloud.js",
-    "import:csv": "node scripts/import-csv-to-supabase.js"
+    "dev": "node --env-file=.env --watch src/server.js",
+    "start": "node --env-file=.env src/server.js",
+    "migrate:lovable": "node --env-file=.env scripts/migrate-lovable-cloud.js",
+    "import:csv": "node --env-file=.env scripts/import-csv-to-supabase.js"
   },
   "engines": {
     "node": ">=20"
