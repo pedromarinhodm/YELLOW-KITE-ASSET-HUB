@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { UserPlus, UserMinus, FileText, History, Search, CalendarIcon, X, Mail, Download } from 'lucide-react';
+import { UserPlus, UserMinus, FileText, History, Search, CalendarIcon, X, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -37,7 +37,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { CategoryIcon } from '@/components/ui/CategoryIcon';
 import { EmployeeCombobox } from '@/components/EmployeeCombobox';
 import { toast } from 'sonner';
-import { webhookService, TermEmailPayload } from '@/services/webhookService';
 import { exportService } from '@/services/exportService';
 import {
   DropdownMenu,
@@ -83,8 +82,7 @@ export default function Allocations() {
   // Term preview
   const [termPreview, setTermPreview] = useState<string>('');
   const [isTermOpen, setIsTermOpen] = useState(false);
-  const [termEmailPayload, setTermEmailPayload] = useState<TermEmailPayload | null>(null);
-  const [sendingEmail, setSendingEmail] = useState(false);
+  const [termType, setTermType] = useState<'onboarding' | 'offboarding'>('onboarding');
 
   useEffect(() => {
     loadData();
@@ -165,27 +163,13 @@ export default function Allocations() {
 
     await allocationService.allocate(selectedEmployee, selectedEquipments, finalNotes, allocationDate.toISOString());
     
-    // Generate term and prepare email payload
+    // Generate term preview
     const employee = employees.find(e => e.id === selectedEmployee)!;
     const equipments = availableEquipments.filter(e => selectedEquipments.includes(e.id));
     const term = allocationService.generateResponsibilityTerm(employee, equipments, allocationDate.toISOString());
     
     setTermPreview(term);
-    setTermEmailPayload({
-      type: 'onboarding',
-      employee: { name: employee.name, email: employee.email, role: employee.role, department: employee.department },
-      equipments: equipments.map(eq => ({
-        name: eq.name,
-        serialNumber: eq.serialNumber,
-        purchaseValue: eq.purchaseValue,
-        condition: equipmentConditions[eq.id],
-      })),
-      term,
-      date: allocationDate.toISOString(),
-      totalValue: equipments.reduce((sum, e) => sum + e.purchaseValue, 0),
-      movementType,
-      returnDeadline: returnDeadline?.toISOString(),
-    });
+    setTermType('onboarding');
     setIsTermOpen(true);
     
     toast.success('Onboarding realizado com sucesso!');
@@ -260,23 +244,7 @@ export default function Allocations() {
         activeAllocations
       );
       setTermPreview(term);
-      setTermEmailPayload({
-        type: 'offboarding',
-        employee: { name: emp.name, email: emp.email, role: emp.role, department: emp.department },
-        equipments: selectedAllocations
-          .map(id => activeAllocations.find(a => a.id === id))
-          .filter(Boolean)
-          .map(a => ({
-            name: a!.equipment.name,
-            serialNumber: a!.equipment.serialNumber,
-            purchaseValue: a!.equipment.purchaseValue,
-            condition: returnConditions[a!.id],
-            destination: returnDestinations[a!.id] || 'available',
-          })),
-        term,
-        date: returnDate.toISOString(),
-        totalValue: returnedEquipments.reduce((sum, e) => sum + e.purchaseValue, 0),
-      });
+      setTermType('offboarding');
       setIsTermOpen(true);
     }
 
@@ -756,6 +724,7 @@ export default function Allocations() {
                     allocationDate.toISOString()
                   );
                   setTermPreview(term);
+                  setTermType('onboarding');
                   setIsTermOpen(true);
                 }}
                 disabled={!selectedEmployee || selectedEquipments.length === 0}
@@ -909,18 +878,10 @@ export default function Allocations() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="w-5 h-5" />
-              {termEmailPayload?.type === 'offboarding' ? 'Termo de Devolução' : 'Termo de Responsabilidade'}
+              {termType === 'offboarding' ? 'Termo de Devolução' : 'Termo de Responsabilidade'}
             </DialogTitle>
           </DialogHeader>
           <div className="mt-4">
-            {termEmailPayload && (
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border mb-4 text-sm">
-                <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
-                <span className="text-muted-foreground">
-                  Enviar para: <strong className="text-foreground">{termEmailPayload.employee.email}</strong>
-                </span>
-              </div>
-            )}
             <pre className="bg-muted p-4 rounded-xl text-xs font-mono whitespace-pre-wrap overflow-auto max-h-[350px]">
               {termPreview}
             </pre>
@@ -933,26 +894,6 @@ export default function Allocations() {
                 toast.success('Termo copiado!');
               }}>
                 Copiar Termo
-              </Button>
-              <Button
-                className="gap-2"
-                disabled={sendingEmail || !termEmailPayload}
-                onClick={async () => {
-                  if (!termEmailPayload) return;
-                  setSendingEmail(true);
-                  try {
-                    await webhookService.sendTermByEmail(termEmailPayload);
-                    toast.success(`Termo enviado para ${termEmailPayload.employee.email}!`);
-                  } catch (error: any) {
-                    console.error('Error sending term:', error);
-                    toast.error(error.message || 'Erro ao enviar termo por email');
-                  } finally {
-                    setSendingEmail(false);
-                  }
-                }}
-              >
-                <Mail className="w-4 h-4" />
-                {sendingEmail ? 'Enviando...' : 'Enviar por Email'}
               </Button>
             </div>
           </div>

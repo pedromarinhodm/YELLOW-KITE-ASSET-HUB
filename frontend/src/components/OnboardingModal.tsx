@@ -21,10 +21,9 @@ import { EmployeeCombobox } from '@/components/EmployeeCombobox';
 import { employeeService } from '@/services/employeeService';
 import { equipmentService } from '@/services/equipmentService';
 import { allocationService } from '@/services/allocationService';
-import { webhookService, TermEmailPayload } from '@/services/webhookService';
 import { Employee, Equipment, STATION_CATEGORIES, FIELD_CATEGORIES } from '@/types';
 import { toast } from 'sonner';
-import { UserPlus, Package, CalendarIcon, FileText, Mail } from 'lucide-react';
+import { CalendarIcon, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -55,8 +54,6 @@ export function OnboardingModal({
   // Term preview
   const [termPreview, setTermPreview] = useState('');
   const [isTermOpen, setIsTermOpen] = useState(false);
-  const [termEmailPayload, setTermEmailPayload] = useState<TermEmailPayload | null>(null);
-  const [sendingEmail, setSendingEmail] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -101,26 +98,12 @@ export function OnboardingModal({
 
       await allocationService.allocate(selectedEmployee, selectedEquipments, finalNotes, allocationDate.toISOString(), returnDeadline?.toISOString());
 
-      // Generate term and prepare email payload
+      // Generate term preview
       const employee = employees.find(e => e.id === selectedEmployee)!;
       const equipments = availableEquipments.filter(e => selectedEquipments.includes(e.id));
       const term = allocationService.generateResponsibilityTerm(employee, equipments, allocationDate.toISOString());
 
       setTermPreview(term);
-      setTermEmailPayload({
-        type: 'onboarding',
-        employee: { name: employee.name, email: employee.email, role: employee.role, department: employee.department },
-        equipments: equipments.map(eq => ({
-          name: eq.name,
-          serialNumber: eq.serialNumber,
-          purchaseValue: eq.purchaseValue,
-        })),
-        term,
-        date: allocationDate.toISOString(),
-        totalValue: equipments.reduce((sum, e) => sum + e.purchaseValue, 0),
-        movementType,
-        returnDeadline: returnDeadline?.toISOString(),
-      });
       setIsTermOpen(true);
 
       toast.success('Onboarding realizado com sucesso!');
@@ -142,7 +125,6 @@ export function OnboardingModal({
     setReturnDeadline(undefined);
     setAllocationDate(new Date());
     setTermPreview('');
-    setTermEmailPayload(null);
     setIsTermOpen(false);
     onOpenChange(false);
   };
@@ -170,14 +152,6 @@ export function OnboardingModal({
             </DialogTitle>
           </DialogHeader>
           <div className="mt-4">
-            {termEmailPayload && (
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border mb-4 text-sm">
-                <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
-                <span className="text-muted-foreground">
-                  Enviar para: <strong className="text-foreground">{termEmailPayload.employee.email}</strong>
-                </span>
-              </div>
-            )}
             <pre className="bg-muted p-4 rounded-xl text-xs font-mono whitespace-pre-wrap overflow-auto max-h-[350px]">
               {termPreview}
             </pre>
@@ -190,26 +164,6 @@ export function OnboardingModal({
                 toast.success('Termo copiado!');
               }}>
                 Copiar Termo
-              </Button>
-              <Button
-                className="gap-2"
-                disabled={sendingEmail || !termEmailPayload}
-                onClick={async () => {
-                  if (!termEmailPayload) return;
-                  setSendingEmail(true);
-                  try {
-                    await webhookService.sendTermByEmail(termEmailPayload);
-                    toast.success(`Termo enviado para ${termEmailPayload.employee.email}!`);
-                  } catch (error: any) {
-                    console.error('Error sending term:', error);
-                    toast.error(error.message || 'Erro ao enviar termo por email');
-                  } finally {
-                    setSendingEmail(false);
-                  }
-                }}
-              >
-                <Mail className="w-4 h-4" />
-                {sendingEmail ? 'Enviando...' : 'Enviar por Email'}
               </Button>
             </div>
           </div>
@@ -424,20 +378,6 @@ export function OnboardingModal({
                       allocationDate.toISOString()
                     );
                     setTermPreview(term);
-                    setTermEmailPayload({
-                      type: 'onboarding',
-                      employee: { name: employee.name, email: employee.email, role: employee.role, department: employee.department },
-                      equipments: equipments.map(eq => ({
-                        name: eq.name,
-                        serialNumber: eq.serialNumber,
-                        purchaseValue: eq.purchaseValue,
-                      })),
-                      term,
-                      date: allocationDate.toISOString(),
-                      totalValue: equipments.reduce((sum, e) => sum + e.purchaseValue, 0),
-                      movementType,
-                      returnDeadline: returnDeadline?.toISOString(),
-                    });
                     setIsTermOpen(true);
                   }}
                   disabled={!selectedEmployee || selectedEquipments.length === 0}

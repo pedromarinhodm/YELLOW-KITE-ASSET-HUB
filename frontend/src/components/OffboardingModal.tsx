@@ -26,10 +26,9 @@ import { CategoryIcon } from '@/components/ui/CategoryIcon';
 import { EmployeeCombobox } from '@/components/EmployeeCombobox';
 import { employeeService } from '@/services/employeeService';
 import { allocationService } from '@/services/allocationService';
-import { webhookService, TermEmailPayload } from '@/services/webhookService';
 import { Employee, AllocationWithDetails } from '@/types';
 import { toast } from 'sonner';
-import { UserMinus, Package, FileText, Mail, CalendarIcon } from 'lucide-react';
+import { Package, FileText, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -63,8 +62,6 @@ export function OffboardingModal({
   // Term preview
   const [termPreview, setTermPreview] = useState('');
   const [isTermOpen, setIsTermOpen] = useState(false);
-  const [termEmailPayload, setTermEmailPayload] = useState<TermEmailPayload | null>(null);
-  const [sendingEmail, setSendingEmail] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -172,22 +169,6 @@ export function OffboardingModal({
         );
 
         setTermPreview(term);
-        setTermEmailPayload({
-          type: 'offboarding',
-          employee: { name: emp.name, email: emp.email, role: emp.role, department: emp.department },
-          equipments: selectedAllocations
-            .map(id => activeAllocations.find(a => a.id === id))
-            .filter(Boolean)
-            .map(a => ({
-              name: a!.equipment.name,
-              serialNumber: a!.equipment.serialNumber,
-              purchaseValue: a!.equipment.purchaseValue,
-              destination: returnDestinations[a!.id] || 'available',
-            })),
-          term,
-          date: returnDate.toISOString(),
-          totalValue: returnedEquipments.reduce((sum, e) => sum + e.purchaseValue, 0),
-        });
         setIsTermOpen(true);
       }
 
@@ -210,7 +191,6 @@ export function OffboardingModal({
     setReturnDate(new Date());
     setReturnDestinations({});
     setTermPreview('');
-    setTermEmailPayload(null);
     setIsTermOpen(false);
     onOpenChange(false);
   };
@@ -233,14 +213,6 @@ export function OffboardingModal({
             </DialogTitle>
           </DialogHeader>
           <div className="mt-4">
-            {termEmailPayload && (
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border mb-4 text-sm">
-                <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
-                <span className="text-muted-foreground">
-                  Enviar para: <strong className="text-foreground">{termEmailPayload.employee.email}</strong>
-                </span>
-              </div>
-            )}
             <pre className="bg-muted p-4 rounded-xl text-xs font-mono whitespace-pre-wrap overflow-auto max-h-[350px]">
               {termPreview}
             </pre>
@@ -253,26 +225,6 @@ export function OffboardingModal({
                 toast.success('Termo copiado!');
               }}>
                 Copiar Termo
-              </Button>
-              <Button
-                className="gap-2"
-                disabled={sendingEmail || !termEmailPayload}
-                onClick={async () => {
-                  if (!termEmailPayload) return;
-                  setSendingEmail(true);
-                  try {
-                    await webhookService.sendTermByEmail(termEmailPayload);
-                    toast.success(`Termo enviado para ${termEmailPayload.employee.email}!`);
-                  } catch (error: any) {
-                    console.error('Error sending term:', error);
-                    toast.error(error.message || 'Erro ao enviar termo por email');
-                  } finally {
-                    setSendingEmail(false);
-                  }
-                }}
-              >
-                <Mail className="w-4 h-4" />
-                {sendingEmail ? 'Enviando...' : 'Enviar por Email'}
               </Button>
             </div>
           </div>
