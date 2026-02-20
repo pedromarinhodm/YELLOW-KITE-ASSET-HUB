@@ -6,8 +6,10 @@ import {
   listEquipments,
   updateEquipment,
 } from "../services/equipments-service.js";
+import { isCoordinator, requireAuth, requireRole } from "../middlewares/auth-middleware.js";
 
 const router = Router();
+router.use(requireAuth, requireRole("admin", "coordinator"));
 
 router.get("/", async (req, res, next) => {
   try {
@@ -34,6 +36,10 @@ router.get("/:id", async (req, res, next) => {
 
 router.post("/", async (req, res, next) => {
   try {
+    if (isCoordinator(req.auth)) {
+      return res.status(403).json({ message: "Somente admin pode cadastrar equipamento" });
+    }
+
     const { name, category, classification, serial_number, purchase_value, purchase_date, status, image_url } = req.body;
 
     if (!name || !category || !classification || !serial_number || !purchase_value || !purchase_date) {
@@ -73,6 +79,9 @@ router.patch("/:id", async (req, res, next) => {
 
 router.delete("/:id", async (req, res, next) => {
   try {
+    if (isCoordinator(req.auth)) {
+      return res.status(403).json({ message: "Somente admin pode remover equipamento" });
+    }
     await deleteEquipment(req.params.id);
     res.status(204).send();
   } catch (error) {

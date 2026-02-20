@@ -96,7 +96,15 @@ export function OnboardingModal({
     try {
       const finalNotes = notes || undefined;
 
-      await allocationService.allocate(selectedEmployee, selectedEquipments, finalNotes, allocationDate.toISOString(), returnDeadline?.toISOString());
+      await allocationService.allocate(
+        selectedEmployee,
+        selectedEquipments,
+        finalNotes,
+        allocationDate.toISOString(),
+        returnDeadline?.toISOString(),
+        undefined,
+        movementType
+      );
 
       // Generate term preview
       const employee = employees.find(e => e.id === selectedEmployee)!;

@@ -21,8 +21,13 @@ export type Database = {
           employee_id: string
           equipment_id: string
           id: string
+          movement_type: string | null
           notes: string | null
+          performed_by: string | null
+          performed_by_name: string | null
           return_deadline: string | null
+          returned_by: string | null
+          returned_by_name: string | null
           returned_at: string | null
           term_signed: boolean | null
           term_signed_at: string | null
@@ -34,8 +39,13 @@ export type Database = {
           employee_id: string
           equipment_id: string
           id?: string
+          movement_type?: string | null
           notes?: string | null
+          performed_by?: string | null
+          performed_by_name?: string | null
           return_deadline?: string | null
+          returned_by?: string | null
+          returned_by_name?: string | null
           returned_at?: string | null
           term_signed?: boolean | null
           term_signed_at?: string | null
@@ -47,8 +57,13 @@ export type Database = {
           employee_id?: string
           equipment_id?: string
           id?: string
+          movement_type?: string | null
           notes?: string | null
+          performed_by?: string | null
+          performed_by_name?: string | null
           return_deadline?: string | null
+          returned_by?: string | null
+          returned_by_name?: string | null
           returned_at?: string | null
           term_signed?: boolean | null
           term_signed_at?: string | null
@@ -146,6 +161,51 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string
+          department: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          department?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          department?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -154,7 +214,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "coordinator"
     }
     CompositeTypes: {
       [_ in never]: never

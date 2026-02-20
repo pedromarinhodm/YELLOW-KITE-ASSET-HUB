@@ -137,10 +137,12 @@ export function OffboardingModal({
 
     setLoading(true);
     try {
-      for (const allocationId of selectedAllocations) {
-        const destination = returnDestinations[allocationId] || 'available';
-        await allocationService.deallocate(allocationId, notes, returnDate.toISOString(), destination);
-      }
+      const entries = selectedAllocations.map((allocationId) => ({
+        allocationId,
+        notes,
+        destination: returnDestinations[allocationId] || 'available',
+      }));
+      await allocationService.deallocateBatch(entries, returnDate.toISOString());
 
       // If all allocations returned, deactivate employee
       const allReturned = selectedAllocations.length === activeAllocations.length;

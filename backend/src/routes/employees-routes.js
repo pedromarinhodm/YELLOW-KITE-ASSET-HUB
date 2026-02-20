@@ -7,21 +7,32 @@ import {
   listEmployees,
   updateEmployee,
 } from "../services/employees-service.js";
+import {
+  ensureEmployeeDepartmentAccess,
+  isCoordinator,
+  requireAuth,
+  requireRole,
+} from "../middlewares/auth-middleware.js";
 
 const router = Router();
+router.use(requireAuth, requireRole("admin", "coordinator"));
 
 router.get("/", async (req, res, next) => {
   try {
     const includeInactive = req.query.includeInactive === "true";
-    const data = await listEmployees({ includeInactive });
+    const department = isCoordinator(req.auth) ? req.auth.department : null;
+    const data = await listEmployees({ includeInactive, department });
     res.json(data);
   } catch (error) {
     next(error);
   }
 });
 
-router.get("/departments", async (_req, res, next) => {
+router.get("/departments", async (req, res, next) => {
   try {
+    if (isCoordinator(req.auth)) {
+      return res.json(req.auth.department ? [req.auth.department] : []);
+    }
     const data = await listDepartments();
     res.json(data);
   } catch (error) {
@@ -31,6 +42,7 @@ router.get("/departments", async (_req, res, next) => {
 
 router.get("/:id", async (req, res, next) => {
   try {
+    await ensureEmployeeDepartmentAccess(req.auth, req.params.id);
     const data = await getEmployeeById(req.params.id);
     if (!data) return res.status(404).json({ message: "Colaborador nao encontrado" });
     res.json(data);
@@ -47,6 +59,10 @@ router.post("/", async (req, res, next) => {
       return res.status(400).json({ message: "Campos obrigatorios: name, role, email, department" });
     }
 
+    if (isCoordinator(req.auth) && department !== req.auth.department) {
+      return res.status(403).json({ message: "Coordenador so pode criar colaboradores do proprio departamento" });
+    }
+
     const data = await createEmployee({ name, role, email, department, status });
     res.status(201).json(data);
   } catch (error) {
@@ -56,8 +72,14 @@ router.post("/", async (req, res, next) => {
 
 router.patch("/:id", async (req, res, next) => {
   try {
+    await ensureEmployeeDepartmentAccess(req.auth, req.params.id);
     const allowed = ["name", "role", "email", "department", "status"];
     const payload = Object.fromEntries(Object.entries(req.body).filter(([key]) => allowed.includes(key)));
+
+    if (isCoordinator(req.auth) && payload.department && payload.department !== req.auth.department) {
+      return res.status(403).json({ message: "Coordenador nao pode mover colaborador para outro departamento" });
+    }
+
     const data = await updateEmployee(req.params.id, payload);
     if (!data) return res.status(404).json({ message: "Colaborador nao encontrado" });
     res.json(data);
@@ -68,6 +90,9 @@ router.patch("/:id", async (req, res, next) => {
 
 router.delete("/:id", async (req, res, next) => {
   try {
+    if (isCoordinator(req.auth)) {
+      return res.status(403).json({ message: "Somente admin pode remover colaborador" });
+    }
     await deleteEmployee(req.params.id);
     res.status(204).send();
   } catch (error) {

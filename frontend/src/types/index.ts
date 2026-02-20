@@ -71,6 +71,9 @@ export interface Allocation {
   termSigned?: boolean;
   termSignedAt?: string;
   returnDeadline?: string;
+  movementType?: 'kit' | 'avulsa';
+  performedByName?: string;
+  returnedByName?: string;
 }
 
 export interface AllocationWithDetails extends Allocation {

@@ -1,6 +1,6 @@
 ﻿import { supabaseAdmin } from "../config/supabase.js";
 
-export async function listAllocations({ activeOnly, employeeId }) {
+export async function listAllocations({ activeOnly, employeeId, department }) {
   let query = supabaseAdmin
     .from("allocations")
     .select("*, employees(*), equipments(*)")
@@ -8,6 +8,7 @@ export async function listAllocations({ activeOnly, employeeId }) {
 
   if (activeOnly) query = query.is("returned_at", null);
   if (employeeId) query = query.eq("employee_id", employeeId);
+  if (department) query = query.eq("employees.department", department);
 
   const { data, error } = await query;
   if (error) throw error;
@@ -21,23 +22,19 @@ export async function getAllocationById(id) {
 }
 
 export async function allocateEquipments(payload) {
-  const { employee_id, equipment_ids, allocated_at, notes, type, return_deadline } = payload;
+  const { employee_id, equipment_ids, allocated_at, notes, return_deadline, performed_by, performed_by_name, movement_type } = payload;
 
-  const rows = equipment_ids.map((equipment_id) => ({
-    employee_id,
-    equipment_id,
-    allocated_at: allocated_at || new Date().toISOString(),
-    notes: notes || null,
-    type: type || "onboarding",
-    return_deadline: return_deadline || null,
-  }));
-
-  const { data, error } = await supabaseAdmin.from("allocations").insert(rows).select("*");
+  const { data, error } = await supabaseAdmin.rpc("allocate_equipments_atomic", {
+    _employee_id: employee_id,
+    _equipment_ids: equipment_ids,
+    _allocated_at: allocated_at || new Date().toISOString(),
+    _notes: notes || null,
+    _return_deadline: return_deadline || null,
+    _performed_by: performed_by || null,
+    _performed_by_name: performed_by_name || null,
+    _movement_type: movement_type || "kit",
+  });
   if (error) throw error;
-
-  const { error: equipmentUpdateError } = await supabaseAdmin.from("equipments").update({ status: "allocated" }).in("id", equipment_ids);
-  if (equipmentUpdateError) throw equipmentUpdateError;
-
   return data;
 }
 
@@ -46,27 +43,32 @@ export async function returnAllocation(id, payload) {
   if (!existing) return null;
 
   const destination = payload.destination || "available";
-  const notes = payload.notes ?? existing.notes;
+  const notesByAllocation = { [id]: payload.notes ?? existing.notes ?? null };
+  const destinationsByAllocation = { [id]: destination };
 
-  const { data, error } = await supabaseAdmin
-    .from("allocations")
-    .update({
-      returned_at: payload.returned_at || new Date().toISOString(),
-      type: "offboarding",
-      notes,
-    })
-    .eq("id", id)
-    .select("*")
-    .maybeSingle();
-
+  const { data, error } = await supabaseAdmin.rpc("deallocate_allocations_atomic", {
+    _allocation_ids: [id],
+    _returned_at: payload.returned_at || new Date().toISOString(),
+    _notes_by_allocation: notesByAllocation,
+    _destinations_by_allocation: destinationsByAllocation,
+    _returned_by: payload.returned_by || null,
+    _returned_by_name: payload.returned_by_name || null,
+  });
   if (error) throw error;
+  return Array.isArray(data) ? data[0] : null;
+}
 
-  const { error: equipmentError } = await supabaseAdmin
-    .from("equipments")
-    .update({ status: destination })
-    .eq("id", existing.equipment_id);
+export async function returnAllocationsBatch(payload) {
+  const { allocation_ids, returned_at, notes_by_allocation, destinations_by_allocation, returned_by, returned_by_name } = payload;
 
-  if (equipmentError) throw equipmentError;
-
-  return data;
+  const { data, error } = await supabaseAdmin.rpc("deallocate_allocations_atomic", {
+    _allocation_ids: allocation_ids,
+    _returned_at: returned_at || new Date().toISOString(),
+    _notes_by_allocation: notes_by_allocation || {},
+    _destinations_by_allocation: destinations_by_allocation || {},
+    _returned_by: returned_by || null,
+    _returned_by_name: returned_by_name || null,
+  });
+  if (error) throw error;
+  return data || [];
 }

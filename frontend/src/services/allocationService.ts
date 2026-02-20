@@ -12,6 +12,9 @@ const mapRow = (row: any): Allocation => ({
   termSigned: row.term_signed,
   termSignedAt: row.term_signed_at,
   returnDeadline: row.return_deadline,
+  movementType: row.movement_type,
+  performedByName: row.performed_by_name || undefined,
+  returnedByName: row.returned_by_name || undefined,
 });
 
 const mapRowWithDetails = (row: any): AllocationWithDetails => ({
@@ -67,31 +70,66 @@ export const allocationService = {
     equipmentIds: string[],
     notes?: string,
     allocatedAt?: string,
-    returnDeadline?: string
+    returnDeadline?: string,
+    performedBy?: { userId: string; name: string },
+    movementType?: 'kit' | 'avulsa'
   ): Promise<Allocation[]> => {
     const data = await apiClient.post<any[]>('/allocations', {
       employee_id: employeeId,
       equipment_ids: equipmentIds,
       allocated_at: allocatedAt || new Date().toISOString(),
-      type: 'onboarding',
       notes,
       return_deadline: returnDeadline || null,
+      performed_by: performedBy?.userId || null,
+      performed_by_name: performedBy?.name || null,
+      movement_type: movementType || 'kit',
     });
 
     return (data || []).map(mapRow);
   },
 
-  deallocate: async (allocationId: string, notes?: string, returnedAt?: string, destination?: 'available' | 'maintenance'): Promise<Allocation | undefined> => {
-    try {
-      const row = await apiClient.patch<any>(`/allocations/${allocationId}/return`, {
-        returned_at: returnedAt || new Date().toISOString(),
-        notes,
-        destination: destination || 'available',
-      });
-      return row ? mapRow(row) : undefined;
-    } catch {
-      return undefined;
-    }
+  deallocateBatch: async (
+    entries: { allocationId: string; notes?: string; destination?: 'available' | 'maintenance' }[],
+    returnedAt?: string,
+    performedBy?: { userId: string; name: string }
+  ): Promise<Allocation[]> => {
+    if (entries.length === 0) return [];
+
+    const allocationIds = entries.map((entry) => entry.allocationId);
+    const notesByAllocation = entries.reduce<Record<string, string>>((acc, entry) => {
+      if (entry.notes) acc[entry.allocationId] = entry.notes;
+      return acc;
+    }, {});
+    const destinationsByAllocation = entries.reduce<Record<string, 'available' | 'maintenance'>>((acc, entry) => {
+      if (entry.destination) acc[entry.allocationId] = entry.destination;
+      return acc;
+    }, {});
+
+    const data = await apiClient.post<any[]>('/allocations/return-batch', {
+      allocation_ids: allocationIds,
+      returned_at: returnedAt || new Date().toISOString(),
+      notes_by_allocation: notesByAllocation,
+      destinations_by_allocation: destinationsByAllocation,
+      returned_by: performedBy?.userId || null,
+      returned_by_name: performedBy?.name || null,
+    });
+
+    return (data || []).map(mapRow);
+  },
+
+  deallocate: async (
+    allocationId: string,
+    notes?: string,
+    returnedAt?: string,
+    destination?: 'available' | 'maintenance',
+    performedBy?: { userId: string; name: string }
+  ): Promise<Allocation | undefined> => {
+    const rows = await allocationService.deallocateBatch(
+      [{ allocationId, notes, destination }],
+      returnedAt,
+      performedBy
+    );
+    return rows[0];
   },
 
   generateResponsibilityTerm: (

@@ -1,10 +1,13 @@
 ﻿import { supabaseAdmin } from "../config/supabase.js";
 
-export async function listEmployees({ includeInactive }) {
+export async function listEmployees({ includeInactive, department }) {
   let query = supabaseAdmin.from("employees").select("*").order("name", { ascending: true });
 
   if (!includeInactive) {
     query = query.eq("status", "Ativo");
+  }
+  if (department) {
+    query = query.eq("department", department);
   }
 
   const { data, error } = await query;

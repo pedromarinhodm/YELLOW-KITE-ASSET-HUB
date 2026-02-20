@@ -161,7 +161,15 @@ export default function Allocations() {
       .join('; ');
     const finalNotes = [onboardingNotes, conditionNotes].filter(Boolean).join(' | ');
 
-    await allocationService.allocate(selectedEmployee, selectedEquipments, finalNotes, allocationDate.toISOString());
+    await allocationService.allocate(
+      selectedEmployee,
+      selectedEquipments,
+      finalNotes,
+      allocationDate.toISOString(),
+      returnDeadline?.toISOString(),
+      undefined,
+      movementType
+    );
     
     // Generate term preview
     const employee = employees.find(e => e.id === selectedEmployee)!;
@@ -210,17 +218,17 @@ export default function Allocations() {
       return;
     }
 
-    for (const allocationId of selectedAllocations) {
-      const alloc = activeAllocations.find(a => a.id === allocationId);
+    const entries = selectedAllocations.map((allocationId) => {
       const condition = returnConditions[allocationId] || '';
       const destination = returnDestinations[allocationId] || 'available';
       const notes = [offboardingNotes, condition ? `Estado: ${condition}` : ''].filter(Boolean).join(' | ');
-      await allocationService.deallocate(allocationId, notes, returnDate.toISOString(), destination);
-    }
+      return { allocationId, notes, destination };
+    });
+
+    await allocationService.deallocateBatch(entries, returnDate.toISOString());
 
     // Check if all allocations are being returned — if so, deactivate employee
-    const allReturned = selectedAllocations.length === activeAllocations.length;
-    if (allReturned && selectedEmployee) {
+    if (movementType === 'kit' && selectedEmployee) {
       await employeeService.deactivate(selectedEmployee, 'Desligado');
     }
 
@@ -248,7 +256,7 @@ export default function Allocations() {
       setIsTermOpen(true);
     }
 
-    toast.success(`${selectedAllocations.length} equipamento(s) devolvido(s) com sucesso!${allReturned ? ' Colaborador marcado como Desligado.' : ''}`);
+    toast.success(`${selectedAllocations.length} equipamento(s) devolvido(s) com sucesso!${movementType === 'kit' ? ' Colaborador marcado como Desligado.' : ''}`);
     setIsOffboardingOpen(false);
     await loadData();
   };

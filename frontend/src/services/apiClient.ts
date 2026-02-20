@@ -2,11 +2,23 @@
 
 type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
+async function getAccessToken(): Promise<string | null> {
+  try {
+    const { supabase } = await import('@/integrations/supabase/client');
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token || null;
+  } catch {
+    return null;
+  }
+}
+
 async function request<T>(method: HttpMethod, path: string, body?: unknown): Promise<T> {
+  const token = await getAccessToken();
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method,
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
