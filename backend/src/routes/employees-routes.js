@@ -17,6 +17,13 @@ import {
 const router = Router();
 router.use(requireAuth, requireRole("admin", "coordinator"));
 
+const normalizeDepartment = (value) =>
+  String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "")
+    .toLowerCase();
+
 router.get("/", async (req, res, next) => {
   try {
     const includeInactive = req.query.includeInactive === "true";
@@ -59,7 +66,7 @@ router.post("/", async (req, res, next) => {
       return res.status(400).json({ message: "Campos obrigatorios: name, role, email, department" });
     }
 
-    if (isCoordinator(req.auth) && department !== req.auth.department) {
+    if (isCoordinator(req.auth) && normalizeDepartment(department) !== normalizeDepartment(req.auth.department)) {
       return res.status(403).json({ message: "Coordenador so pode criar colaboradores do proprio departamento" });
     }
 
@@ -76,7 +83,11 @@ router.patch("/:id", async (req, res, next) => {
     const allowed = ["name", "role", "email", "department", "status"];
     const payload = Object.fromEntries(Object.entries(req.body).filter(([key]) => allowed.includes(key)));
 
-    if (isCoordinator(req.auth) && payload.department && payload.department !== req.auth.department) {
+    if (
+      isCoordinator(req.auth) &&
+      payload.department &&
+      normalizeDepartment(payload.department) !== normalizeDepartment(req.auth.department)
+    ) {
       return res.status(403).json({ message: "Coordenador nao pode mover colaborador para outro departamento" });
     }
 

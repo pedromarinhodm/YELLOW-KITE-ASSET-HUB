@@ -1,5 +1,14 @@
 import { supabaseAdmin } from "../config/supabase.js";
 
+function normalizeDepartment(value) {
+  if (!value) return "";
+  return String(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "")
+    .toLowerCase();
+}
+
 function forbidden(message = "Acesso negado") {
   const err = new Error(message);
   err.status = 403;
@@ -80,7 +89,7 @@ export async function ensureEmployeeDepartmentAccess(auth, employeeId) {
   if (error) throw error;
   if (!data) throw notFound("Colaborador nao encontrado");
 
-  if (!auth.department || data.department !== auth.department) {
+  if (!auth.department || normalizeDepartment(data.department) !== normalizeDepartment(auth.department)) {
     throw forbidden("Coordenador so pode acessar colaboradores do proprio departamento");
   }
 }
@@ -99,7 +108,7 @@ export async function ensureAllocationDepartmentAccess(auth, allocationId) {
   if (!data) throw notFound("Alocacao nao encontrada");
 
   const allocationDepartment = data.employees?.department || null;
-  if (!auth.department || allocationDepartment !== auth.department) {
+  if (!auth.department || normalizeDepartment(allocationDepartment) !== normalizeDepartment(auth.department)) {
     throw forbidden("Coordenador so pode acessar alocacoes do proprio departamento");
   }
 }
@@ -119,7 +128,9 @@ export async function ensureAllocationsDepartmentAccess(auth, allocationIds) {
   const rows = data || [];
   if (rows.length !== allocationIds.length) throw notFound("Uma ou mais alocacoes nao encontradas");
 
-  const invalid = rows.some((row) => !auth.department || row.employees?.department !== auth.department);
+  const invalid = rows.some(
+    (row) => !auth.department || normalizeDepartment(row.employees?.department) !== normalizeDepartment(auth.department)
+  );
   if (invalid) {
     throw forbidden("Coordenador so pode acessar alocacoes do proprio departamento");
   }

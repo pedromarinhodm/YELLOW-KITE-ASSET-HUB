@@ -1,4 +1,13 @@
-﻿import { supabaseAdmin } from "../config/supabase.js";
+import { supabaseAdmin } from "../config/supabase.js";
+
+function normalizeDepartment(value) {
+  if (!value) return "";
+  return String(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "")
+    .toLowerCase();
+}
 
 export async function listEmployees({ includeInactive, department }) {
   let query = supabaseAdmin.from("employees").select("*").order("name", { ascending: true });
@@ -6,13 +15,12 @@ export async function listEmployees({ includeInactive, department }) {
   if (!includeInactive) {
     query = query.eq("status", "Ativo");
   }
-  if (department) {
-    query = query.eq("department", department);
-  }
 
   const { data, error } = await query;
   if (error) throw error;
-  return data;
+  if (!department) return data;
+
+  return (data || []).filter((row) => normalizeDepartment(row.department) === normalizeDepartment(department));
 }
 
 export async function getEmployeeById(id) {

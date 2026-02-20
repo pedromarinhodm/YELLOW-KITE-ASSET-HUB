@@ -1,4 +1,13 @@
-﻿import { supabaseAdmin } from "../config/supabase.js";
+import { supabaseAdmin } from "../config/supabase.js";
+
+function normalizeDepartment(value) {
+  if (!value) return "";
+  return String(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "")
+    .toLowerCase();
+}
 
 export async function listAllocations({ activeOnly, employeeId, department }) {
   let query = supabaseAdmin
@@ -8,11 +17,14 @@ export async function listAllocations({ activeOnly, employeeId, department }) {
 
   if (activeOnly) query = query.is("returned_at", null);
   if (employeeId) query = query.eq("employee_id", employeeId);
-  if (department) query = query.eq("employees.department", department);
 
   const { data, error } = await query;
   if (error) throw error;
-  return data;
+  if (!department) return data;
+
+  return (data || []).filter(
+    (row) => normalizeDepartment(row.employees?.department) === normalizeDepartment(department)
+  );
 }
 
 export async function getAllocationById(id) {
