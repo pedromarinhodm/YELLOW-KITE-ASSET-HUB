@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { UserPlus, UserMinus, FileText, History, Search, CalendarIcon, X, Download } from 'lucide-react';
+import { UserPlus, UserMinus, FileText, Search, CalendarIcon, X, Download, Mail } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -28,7 +28,6 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { employeeService } from '@/services/employeeService';
 import { equipmentService } from '@/services/equipmentService';
 import { allocationService } from '@/services/allocationService';
@@ -38,12 +37,15 @@ import { CategoryIcon } from '@/components/ui/CategoryIcon';
 import { EmployeeCombobox } from '@/components/EmployeeCombobox';
 import { toast } from 'sonner';
 import { exportService } from '@/services/exportService';
+import { webhookService, TermEmailPayload } from '@/services/webhookService';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { getErrorMessage, withTimeout } from '@/lib/request';
+
 
 export default function Allocations() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -83,6 +85,8 @@ export default function Allocations() {
   const [termPreview, setTermPreview] = useState<string>('');
   const [isTermOpen, setIsTermOpen] = useState(false);
   const [termType, setTermType] = useState<'onboarding' | 'offboarding'>('onboarding');
+  const [termEmailPayload, setTermEmailPayload] = useState<TermEmailPayload | null>(null);
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -103,25 +107,46 @@ export default function Allocations() {
   }, [searchParams, loading]);
 
   const loadData = async () => {
-    const [emps, allAllocs] = await Promise.all([
-      employeeService.getAll(),
-      allocationService.getAllWithDetails(),
-    ]);
+    try {
+      const [emps, allAllocs] = await withTimeout(
+        Promise.all([
+          employeeService.getAll(),
+          allocationService.getAllWithDetails(),
+        ])
+      );
 
-    setEmployees(emps);
-    setAllocations(allAllocs);
-    setLoading(false);
+      setEmployees(emps);
+      setAllocations(allAllocs);
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Erro ao carregar dados de alocação.'));
+      setEmployees([]);
+      setAllocations([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
+
   const loadAvailableEquipments = async () => {
-    const allAvailable = await equipmentService.getByStatus('available');
-    setAvailableEquipments(allAvailable);
+    try {
+      const allAvailable = await withTimeout(equipmentService.getByStatus('available'));
+      setAvailableEquipments(allAvailable);
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Erro ao carregar equipamentos disponíveis.'));
+      setAvailableEquipments([]);
+    }
   };
 
   const loadActiveAllocations = async (employeeId: string) => {
-    const actives = await allocationService.getActiveByEmployee(employeeId);
-    setActiveAllocations(actives);
+    try {
+      const actives = await withTimeout(allocationService.getActiveByEmployee(employeeId));
+      setActiveAllocations(actives);
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Erro ao carregar alocações ativas.'));
+      setActiveAllocations([]);
+    }
   };
+
 
   const handleOpenOnboarding = async () => {
     await loadAvailableEquipments();
@@ -161,29 +186,50 @@ export default function Allocations() {
       .join('; ');
     const finalNotes = [onboardingNotes, conditionNotes].filter(Boolean).join(' | ');
 
-    await allocationService.allocate(
-      selectedEmployee,
-      selectedEquipments,
-      finalNotes,
-      allocationDate.toISOString(),
-      returnDeadline?.toISOString(),
-      undefined,
-      movementType
-    );
-    
-    // Generate term preview
-    const employee = employees.find(e => e.id === selectedEmployee)!;
-    const equipments = availableEquipments.filter(e => selectedEquipments.includes(e.id));
-    const term = allocationService.generateResponsibilityTerm(employee, equipments, allocationDate.toISOString());
-    
-    setTermPreview(term);
-    setTermType('onboarding');
-    setIsTermOpen(true);
-    
-    toast.success('Onboarding realizado com sucesso!');
-    setIsOnboardingOpen(false);
-    await loadData();
+    try {
+      await withTimeout(
+        allocationService.allocate(
+          selectedEmployee,
+          selectedEquipments,
+          finalNotes,
+          allocationDate.toISOString(),
+          returnDeadline?.toISOString(),
+          undefined,
+          movementType
+        )
+      );
+
+      const employee = employees.find(e => e.id === selectedEmployee)!;
+      const equipments = availableEquipments.filter(e => selectedEquipments.includes(e.id));
+      const term = allocationService.generateResponsibilityTerm(employee, equipments, allocationDate.toISOString());
+
+      setTermPreview(term);
+      setTermEmailPayload({
+        type: 'onboarding',
+        employee: { name: employee.name, email: employee.email, role: employee.role, department: employee.department },
+        equipments: equipments.map(eq => ({
+          name: eq.name,
+          serialNumber: eq.serialNumber,
+          purchaseValue: eq.purchaseValue,
+          condition: equipmentConditions[eq.id],
+        })),
+        term,
+        date: allocationDate.toISOString(),
+        totalValue: equipments.reduce((sum, e) => sum + e.purchaseValue, 0),
+        movementType,
+        returnDeadline: returnDeadline?.toISOString(),
+      });
+      setTermType('onboarding');
+      setIsTermOpen(true);
+
+      toast.success('Onboarding realizado com sucesso!');
+      setIsOnboardingOpen(false);
+      await loadData();
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Erro ao processar onboarding.'));
+    }
   };
+
 
   const handleOpenOffboarding = async () => {
     setSelectedEmployee('');
@@ -225,12 +271,16 @@ export default function Allocations() {
       return { allocationId, notes, destination };
     });
 
-    await allocationService.deallocateBatch(entries, returnDate.toISOString());
+    try {
+      await withTimeout(
+        allocationService.deallocateBatch(entries, returnDate.toISOString())
+      );
 
-    // Check if all allocations are being returned — if so, deactivate employee
-    if (movementType === 'kit' && selectedEmployee) {
-      await employeeService.deactivate(selectedEmployee, 'Desligado');
-    }
+      // Check if all allocations are being returned — if so, deactivate employee
+      if (movementType === 'kit' && selectedEmployee) {
+        await withTimeout(employeeService.deactivate(selectedEmployee, 'Desligado'));
+      }
+
 
     // Generate return term
     const emp = employees.find(e => e.id === selectedEmployee);
@@ -252,14 +302,35 @@ export default function Allocations() {
         activeAllocations
       );
       setTermPreview(term);
+      setTermEmailPayload({
+        type: 'offboarding',
+        employee: { name: emp.name, email: emp.email, role: emp.role, department: emp.department },
+        equipments: selectedAllocations
+          .map(id => activeAllocations.find(a => a.id === id))
+          .filter(Boolean)
+          .map(a => ({
+            name: a!.equipment.name,
+            serialNumber: a!.equipment.serialNumber,
+            purchaseValue: a!.equipment.purchaseValue,
+            condition: returnConditions[a!.id],
+            destination: returnDestinations[a!.id] || 'available',
+          })),
+        term,
+        date: returnDate.toISOString(),
+        totalValue: returnedEquipments.reduce((sum, e) => sum + e.purchaseValue, 0),
+      });
       setTermType('offboarding');
       setIsTermOpen(true);
     }
 
-    toast.success(`${selectedAllocations.length} equipamento(s) devolvido(s) com sucesso!${movementType === 'kit' ? ' Colaborador marcado como Desligado.' : ''}`);
-    setIsOffboardingOpen(false);
-    await loadData();
+      toast.success(`${selectedAllocations.length} equipamento(s) devolvido(s) com sucesso!${movementType === 'kit' ? ' Colaborador marcado como Desligado.' : ''}`);
+      setIsOffboardingOpen(false);
+      await loadData();
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Erro ao processar devolução.'));
+    }
   };
+
 
   if (loading) {
     return (
@@ -287,14 +358,14 @@ export default function Allocations() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => {
-                const data = exportService.formatAllocationData(allocations as any);
+                const data = exportService.formatAllocationData(allocations);
                 exportService.exportData(data, { filename: 'alocacoes', format: 'xlsx', sheetName: 'Alocações' });
                 toast.success('Relatório Excel exportado!');
               }}>
                 Exportar Excel (.xlsx)
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => {
-                const data = exportService.formatAllocationData(allocations as any);
+                const data = exportService.formatAllocationData(allocations);
                 exportService.exportData(data, { filename: 'alocacoes', format: 'csv', sheetName: 'Alocações' });
                 toast.success('Relatório CSV exportado!');
               }}>
@@ -884,27 +955,56 @@ export default function Allocations() {
       <Dialog open={isTermOpen} onOpenChange={setIsTermOpen}>
         <DialogContent className="sm:max-w-[700px] max-h-[80vh]">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              {termType === 'offboarding' ? 'Termo de Devolução' : 'Termo de Responsabilidade'}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="mt-4">
-            <pre className="bg-muted p-4 rounded-xl text-xs font-mono whitespace-pre-wrap overflow-auto max-h-[350px]">
-              {termPreview}
-            </pre>
-            <div className="flex justify-end gap-3 mt-4">
-              <Button variant="outline" onClick={() => setIsTermOpen(false)}>
-                Fechar
-              </Button>
-              <Button variant="outline" onClick={() => {
-                navigator.clipboard.writeText(termPreview);
-                toast.success('Termo copiado!');
-              }}>
-                Copiar Termo
-              </Button>
+          <DialogTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5" />
+            {termEmailPayload?.type === 'offboarding' ? 'Termo de Devolução' : 'Termo de Responsabilidade'}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="mt-4">
+          {termEmailPayload && (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border mb-4 text-sm">
+              <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
+              <span className="text-muted-foreground">
+                Enviar para: <strong className="text-foreground">{termEmailPayload.employee.email}</strong>
+              </span>
             </div>
+          )}
+          <pre className="bg-muted p-4 rounded-xl text-xs font-mono whitespace-pre-wrap overflow-auto max-h-[350px]">
+            {termPreview}
+          </pre>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button variant="outline" onClick={() => setIsTermOpen(false)}>
+              Fechar
+            </Button>
+            <Button variant="outline" onClick={() => {
+              navigator.clipboard.writeText(termPreview);
+              toast.success('Termo copiado!');
+            }}>
+              Copiar Termo
+            </Button>
+            <Button
+              className="gap-2"
+              disabled={sendingEmail || !termEmailPayload}
+              onClick={async () => {
+                if (!termEmailPayload) return;
+                setSendingEmail(true);
+                try {
+                  await withTimeout(webhookService.sendTermByEmail(termEmailPayload));
+                  toast.success(`Termo enviado para ${termEmailPayload.employee.email}!`);
+                } catch (error: unknown) {
+                  console.error('Error sending term:', error);
+                  toast.error(getErrorMessage(error, 'Erro ao enviar termo por email.'));
+                } finally {
+                  setSendingEmail(false);
+                }
+              }}
+            >
+              <Mail className="w-4 h-4" />
+              {sendingEmail ? 'Enviando...' : 'Enviar por Email'}
+            </Button>
           </div>
+        </div>
+
         </DialogContent>
       </Dialog>
     </div>
